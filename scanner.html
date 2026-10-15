@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Absensi - Marching Band UMM</title>
+    <!-- Favicon & Mobile Theme -->
+    <link rel="icon" type="image/png" href="./3.png">
+    <link rel="apple-touch-icon" href="./3.png">
+    <meta name="theme-color" content="#800000">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        :root { --maroon: #800000; --maroon-dark: #600000; }
+        .bg-maroon { background-color: var(--maroon); }
+        .text-maroon { color: var(--maroon); }
+        .btn-maroon {
+            background: linear-gradient(45deg, #800000, #a00000);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .btn-maroon:hover {
+            background: linear-gradient(45deg, #a00000, #c00000);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(128, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center justify-between p-4">
+
+    <!-- SAFELIST WARNA UNTUK TAILWIND CDN (Agar JS bisa merubah warna indikator tanpa error) -->
+    <div class="hidden bg-emerald-50 border-emerald-200 bg-emerald-500 text-emerald-900 text-emerald-700 bg-red-50 border-red-200 bg-red-500 text-red-900 text-red-700"></div>
+
+    <!-- Header Scanner -->
+    <header class="w-full max-w-md flex justify-between items-center bg-[#800000] p-4 rounded-2xl border border-red-900 shadow-lg text-white">
+        <div class="flex items-center space-x-3">
+            <img src="1.png" alt="Logo MBUMM" class="w-10 h-10 object-contain bg-white rounded-xl p-1 shadow-md">
+            <div>
+                <h1 class="text-sm font-black tracking-wider uppercase">Marching Band UMM</h1>
+                <p class="text-[11px] text-amber-300 font-bold">March For Victory • Scanner</p>
+            </div>
+        </div>
+        <a href="index.html" class="bg-red-950/70 hover:bg-red-900 text-amber-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold border border-red-900 transition shadow-sm">
+            ⬅ Dashboard
+        </a>
+    </header>
+
+    <!-- KARTU INFORMASI JADWAL AKTIF -->
+    <div id="scannerScheduleCard" class="w-full max-w-md mt-3 bg-white border border-slate-200 p-3 rounded-2xl text-center space-y-1 shadow-sm transition-colors duration-300">
+        <div class="flex items-center justify-center gap-2">
+            <span id="scannerStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400 shadow-sm"></span>
+            <span id="scannerDateText" class="text-xs font-bold text-slate-700">Memuat Jadwal...</span>
+        </div>
+        <p id="scannerTimeText" class="text-[11px] text-slate-500">Menyinkronkan data...</p>
+    </div>
+
+    <!-- AREA KAMERA / SCANNER -->
+    <main class="w-full max-w-md flex-grow flex flex-col items-center justify-center my-4 space-y-4">
+        <div class="relative w-full aspect-square bg-black rounded-3xl overflow-hidden border border-slate-300 shadow-lg flex items-center justify-center">
+            
+            <video id="video" class="w-full h-full object-cover" style="display: none;"></video>
+            
+            <!-- Kotak Logo (Background Diubah ke bg-slate-900 agar logo putih terlihat) -->
+            <div id="logoBox" class="absolute inset-0 flex flex-col items-center justify-center p-6 space-y-3 bg-slate-900 transition-all duration-500">
+                <img id="logo" src="1.png" alt="Logo MBUMM" class="w-36 h-36 object-contain drop-shadow-md transition-opacity duration-500">
+                <p class="text-xs text-amber-400 font-bold tracking-widest uppercase">Kamera Standby</p>
+            </div>
+
+            <canvas id="canvas" style="display: none;"></canvas>
+        </div>
+
+        <div id="result" class="w-full bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-center text-sm font-semibold shadow-sm" style="display: none;"></div>
+        <div id="error" class="w-full bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-center text-xs font-semibold shadow-sm" style="display: none;"></div>
+        <div id="status" class="text-xs text-slate-500 text-center font-mono font-bold">Tekan tombol Start untuk memulai</div>
+    </main>
+
+    <!-- Tombol Kontrol -->
+    <footer class="w-full max-w-md pb-2">
+        <button id="toggleScan" class="btn-maroon w-full py-4 rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-2">
+            <span>📷 Start Scanning</span>
+        </button>
+    </footer>
+
+    <!-- Skrip Scanner -->
+    <script src="js/scanner.js?v=1.0"></script>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- PWA SERVICE WORKER REGISTRATION -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Registered'))
+                .catch(err => console.log('Service Worker Error', err));
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Anggota - March For Victory</title>
+    <!-- Favicon & Mobile Theme -->
+    <link rel="icon" type="image/png" href="./1.png">
+    <link rel="apple-touch-icon" href="./1.png">
+    <meta name="theme-color" content="#800000">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .bg-maroon { background-color: #800000; }
+        .text-maroon { color: #800000; }
+        .btn-maroon { background-color: #800000; color: white; transition: background 0.2s; }
+        .btn-maroon:hover { background-color: #600000; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#800000] via-red-950 to-slate-950 flex flex-col items-center justify-center min-h-screen p-4 relative overflow-hidden">
+    
+    <!-- Efek Latar Belakang (Sama dengan Home Utama) -->
+    <div class="absolute top-[-20%] left-[-10%] w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative z-10 bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center border border-white/20">
+        
+        <div class="flex items-center justify-center gap-3 mb-2">
+            <img src="1.png" alt="Logo MBUMM" class="w-12 h-12 rounded-full bg-white p-1 shadow-md">
+            <div class="text-left">
+                <h2 class="text-sm font-black text-[#800000] tracking-wide">MARCHING BAND UMM</h2>
+                <p class="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Portal Anggota</p>
+            </div>
+        </div>
+        
+        <p class="text-xs text-slate-500 mb-6 font-medium">Download ulang Kartu QR Code absensi mandiri Anda.</p>
+        
+        <input type="text" id="memberId" placeholder="Masukkan ID (Contoh: MB001)" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center font-mono font-bold mb-4 bg-slate-50 focus:border-[#800000] focus:ring-0 outline-none transition shadow-inner">
+        <button id="searchBtn" onclick="cariAnggota()" class="w-full btn-maroon font-bold py-3.5 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm">
+            🔍 Cari ID Saya
+        </button>
+
+        <!-- Hasil Pencarian -->
+        <div id="resultArea" class="mt-8 hidden space-y-4">
+            <hr class="border-slate-200 border-dashed">
+            
+            <div class="space-y-1">
+                <h2 id="resNama" class="font-black text-[#800000] text-xl">Nama</h2>
+                <div class="inline-block">
+                    <span id="resSection" class="px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border bg-slate-100 text-slate-800">Section</span>
+                </div>
+                <p id="resId" class="text-[10px] font-mono text-slate-500 font-bold mt-1">ID</p>
+            </div>
+            
+            <div class="flex justify-center p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl shadow-inner mt-2">
+                <img id="qrImage" src="" alt="Loading QR..." class="w-48 h-48 object-contain">
+            </div>
+
+            <a id="downloadBtn" href="#" download class="block w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-black py-3 rounded-xl shadow-md transition text-sm">
+                📥 Download Kartu (PNG)
+            </a>
+        </div>
+        
+        <!-- Peringatan Error -->
+        <p id="errorMsg" class="text-red-500 text-xs font-bold mt-4 hidden bg-red-50 p-2 rounded-lg border border-red-200"></p>
+    </div>
+
+    <script>
+        function getSectionBadgeClass(section) {
+            switch(section) {
+                case 'Field Commander': return 'bg-amber-100 text-amber-800 border-amber-300';
+                case 'Brass': return 'bg-blue-100 text-blue-800 border-blue-300';
+                case 'Battery': return 'bg-red-100 text-red-800 border-red-300';
+                case 'Pit Percussion': return 'bg-pink-100 text-pink-800 border-pink-300';
+                case 'Color Guard': return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                default: return 'bg-slate-100 text-slate-800 border-slate-300';
+            }
+        }
+
+        // Fungsi Generator QR yang SAMA PERSIS dengan di app.js
+        function generateQRCodeWithLogo(playerData, callback) {
+            const qrDataDict = {
+                Id: String(playerData.Id || ''),
+                Nama: String(playerData.Nama || ''),
+                Section: String(playerData.Section || ''),
+                NIM: String(playerData.NIM || ''),
+                Email: String(playerData.Email || '')
+            };
+            const jsonString = JSON.stringify(qrDataDict);
+
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            document.body.appendChild(tempDiv);
+
+            new QRCode(tempDiv, {
+                text: jsonString,
+                width: 400, height: 400,
+                colorDark: "#800000", colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H 
+            });
+
+            setTimeout(() => {
+                const qrCanvas = tempDiv.querySelector('canvas');
+                if (!qrCanvas) { document.body.removeChild(tempDiv); callback(null); return; }
+
+                const padding = 40;
+                const originalWidth = qrCanvas.width;
+                const originalHeight = qrCanvas.height;
+                
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = originalWidth + (padding * 2);
+                finalCanvas.height = originalHeight + (padding * 2);
+                const ctx = finalCanvas.getContext('2d');
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+                ctx.drawImage(qrCanvas, padding, padding);
+
+                const logoImg = new Image();
+                logoImg.crossOrigin = "anonymous";
+                logoImg.src = "1.png";
+
+                logoImg.onload = function() {
+                    const factor = 4;
+                    const maxLogoSize = originalWidth / factor;
+                    let logoW = logoImg.width, logoH = logoImg.height;
+
+                    if (logoW > maxLogoSize || logoH > maxLogoSize) {
+                        if (logoW > logoH) { logoH = (maxLogoSize / logoW) * logoH; logoW = maxLogoSize; } 
+                        else { logoW = (maxLogoSize / logoH) * logoW; logoH = maxLogoSize; }
+                    }
+
+                    const posW = padding + (originalWidth - logoW) / 2;
+                    const posH = padding + (originalHeight - logoH) / 2;
+
+                    ctx.drawImage(logoImg, posW, posH, logoW, logoH);
+                    callback(finalCanvas.toDataURL("image/png"));
+                    document.body.removeChild(tempDiv);
+                };
+
+                logoImg.onerror = function() {
+                    callback(finalCanvas.toDataURL("image/png"));
+                    document.body.removeChild(tempDiv);
+                };
+            }, 250);
+        }
+
+        function cariAnggota() {
+            const inputId = document.getElementById('memberId').value.trim().toUpperCase();
+            const resultArea = document.getElementById('resultArea');
+            const errorMsg = document.getElementById('errorMsg');
+            const btn = document.getElementById('searchBtn');
+            
+            errorMsg.classList.add('hidden');
+            resultArea.classList.add('hidden');
+            
+            if(!inputId) {
+                errorMsg.textContent = "Mohon masukkan ID Anda terlebih dahulu.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            const players = JSON.parse(localStorage.getItem('mb_players')) || [];
+            const player = players.find(p => p.Id.toUpperCase() === inputId);
+
+            if(player) {
+                btn.innerHTML = "Memproses..."; btn.disabled = true;
+                
+                document.getElementById('resNama').textContent = player.Nama;
+                
+                const sectionBadge = document.getElementById('resSection');
+                sectionBadge.textContent = player.Section;
+                sectionBadge.className = `px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border ${getSectionBadgeClass(player.Section)}`;
+                
+                document.getElementById('resId').textContent = `ID: ${player.Id}`;
+
+                generateQRCodeWithLogo(player, (dataUrl) => {
+                    if(dataUrl) {
+                        document.getElementById('qrImage').src = dataUrl;
+                        
+                        const dlBtn = document.getElementById('downloadBtn');
+                        dlBtn.href = dataUrl;
+                        dlBtn.download = `QR_MBUMM_${player.Id}_${player.Nama.replace(/\s+/g, '_')}.png`;
+                        
+                        resultArea.classList.remove('hidden');
+                    } else {
+                        errorMsg.textContent = "Gagal membuat gambar QR Code.";
+                        errorMsg.classList.remove('hidden');
+                    }
+                    btn.innerHTML = "🔍 Cari ID Saya"; btn.disabled = false;
+                });
+            } else {
+                errorMsg.textContent = "ID tidak ditemukan. Silakan cek kembali atau hubungi admin.";
+                errorMsg.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
