@@ -1,10 +1,20 @@
+<!--
+ * ==============================================================================
+ * MARCH FOR VICTORY - PORTAL
+ * Developer    : Luthfin Ramadhani Tuadingo
+ * File : portal.html
+ * ==============================================================================
+ * Deskripsi : Halaman portal untuk anggota Marching Band Universitas Muhammadiyah Malang 
+               agar dapat mengunduh kartu QR Code absensi mandiri.
+ * ==============================================================================
+ -->
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Anggota - March For Victory</title>
-    <!-- Favicon & Mobile Theme -->
     <link rel="icon" type="image/png" href="./1.png">
     <link rel="apple-touch-icon" href="./1.png">
     <meta name="theme-color" content="#800000">
@@ -19,12 +29,7 @@
 </head>
 <body class="bg-gradient-to-br from-[#800000] via-red-950 to-slate-950 flex flex-col items-center justify-center min-h-screen p-4 relative overflow-hidden">
     
-    <!-- Efek Latar Belakang (Sama dengan Home Utama) -->
-    <div class="absolute top-[-20%] left-[-10%] w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
     <div class="relative z-10 bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center border border-white/20">
-        
         <div class="flex items-center justify-center gap-3 mb-2">
             <img src="1.png" alt="Logo MBUMM" class="w-12 h-12 rounded-full bg-white p-1 shadow-md">
             <div class="text-left">
@@ -33,17 +38,16 @@
             </div>
         </div>
         
-        <p class="text-xs text-slate-500 mb-6 font-medium">Download ulang Kartu QR Code absensi mandiri Anda.</p>
+        <p class="text-xs text-slate-500 mb-6 font-medium">Download Kartu QR Code absensi mandiri Anda.</p>
         
-        <input type="text" id="memberId" placeholder="Masukkan ID (Contoh: MB001)" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center font-mono font-bold mb-4 bg-slate-50 focus:border-[#800000] focus:ring-0 outline-none transition shadow-inner">
-        <button id="searchBtn" onclick="cariAnggota()" class="w-full btn-maroon font-bold py-3.5 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm">
+        <input type="text" id="memberId" placeholder="Masukkan ID (Contoh: MB-001)" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center font-mono font-bold mb-4 bg-slate-50 focus:border-[#800000] outline-none">
+        <button id="searchBtn" onclick="cariAnggota()" class="w-full btn-maroon font-bold py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm">
             🔍 Cari ID Saya
         </button>
 
         <!-- Hasil Pencarian -->
         <div id="resultArea" class="mt-8 hidden space-y-4">
             <hr class="border-slate-200 border-dashed">
-            
             <div class="space-y-1">
                 <h2 id="resNama" class="font-black text-[#800000] text-xl">Nama</h2>
                 <div class="inline-block">
@@ -61,7 +65,6 @@
             </a>
         </div>
         
-        <!-- Peringatan Error -->
         <p id="errorMsg" class="text-red-500 text-xs font-bold mt-4 hidden bg-red-50 p-2 rounded-lg border border-red-200"></p>
     </div>
 
@@ -77,7 +80,6 @@
             }
         }
 
-        // Fungsi Generator QR yang SAMA PERSIS dengan di app.js
         function generateQRCodeWithLogo(playerData, callback) {
             const qrDataDict = {
                 Id: String(playerData.Id || ''),
@@ -104,12 +106,9 @@
                 if (!qrCanvas) { document.body.removeChild(tempDiv); callback(null); return; }
 
                 const padding = 40;
-                const originalWidth = qrCanvas.width;
-                const originalHeight = qrCanvas.height;
-                
                 const finalCanvas = document.createElement('canvas');
-                finalCanvas.width = originalWidth + (padding * 2);
-                finalCanvas.height = originalHeight + (padding * 2);
+                finalCanvas.width = qrCanvas.width + (padding * 2);
+                finalCanvas.height = qrCanvas.height + (padding * 2);
                 const ctx = finalCanvas.getContext('2d');
 
                 ctx.fillStyle = '#ffffff';
@@ -121,8 +120,7 @@
                 logoImg.src = "1.png";
 
                 logoImg.onload = function() {
-                    const factor = 4;
-                    const maxLogoSize = originalWidth / factor;
+                    const maxLogoSize = qrCanvas.width / 4;
                     let logoW = logoImg.width, logoH = logoImg.height;
 
                     if (logoW > maxLogoSize || logoH > maxLogoSize) {
@@ -130,10 +128,7 @@
                         else { logoW = (maxLogoSize / logoH) * logoW; logoH = maxLogoSize; }
                     }
 
-                    const posW = padding + (originalWidth - logoW) / 2;
-                    const posH = padding + (originalHeight - logoH) / 2;
-
-                    ctx.drawImage(logoImg, posW, posH, logoW, logoH);
+                    ctx.drawImage(logoImg, padding + (qrCanvas.width - logoW) / 2, padding + (qrCanvas.height - logoH) / 2, logoW, logoH);
                     callback(finalCanvas.toDataURL("image/png"));
                     document.body.removeChild(tempDiv);
                 };
@@ -155,7 +150,7 @@
             resultArea.classList.add('hidden');
             
             if(!inputId) {
-                errorMsg.textContent = "Mohon masukkan ID Anda terlebih dahulu.";
+                errorMsg.textContent = "Masukkan ID Anda terlebih dahulu.";
                 errorMsg.classList.remove('hidden');
                 return;
             }
@@ -167,21 +162,17 @@
                 btn.innerHTML = "Memproses..."; btn.disabled = true;
                 
                 document.getElementById('resNama').textContent = player.Nama;
-                
                 const sectionBadge = document.getElementById('resSection');
                 sectionBadge.textContent = player.Section;
                 sectionBadge.className = `px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border ${getSectionBadgeClass(player.Section)}`;
-                
                 document.getElementById('resId').textContent = `ID: ${player.Id}`;
 
                 generateQRCodeWithLogo(player, (dataUrl) => {
                     if(dataUrl) {
                         document.getElementById('qrImage').src = dataUrl;
-                        
                         const dlBtn = document.getElementById('downloadBtn');
                         dlBtn.href = dataUrl;
                         dlBtn.download = `QR_MBUMM_${player.Id}_${player.Nama.replace(/\s+/g, '_')}.png`;
-                        
                         resultArea.classList.remove('hidden');
                     } else {
                         errorMsg.textContent = "Gagal membuat gambar QR Code.";

@@ -1,3 +1,13 @@
+<!--
+ * ==============================================================================
+ * MARCH FOR VICTORY - DASHBOARD & CLOUD ATTENDANCE SYSTEM
+ * Developer    : Luthfin Ramadhani Tuadingo
+ * File : index.html
+ * ==============================================================================
+ * Deskripsi : Halaman utama dashboard sistem absensi digital Marching Band Universitas Muhammadiyah Malang.
+ * ==============================================================================
+ -->
+ 
 <!DOCTYPE html>
 <html lang="id">
 
@@ -6,223 +16,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Marching Band UMM</title>
 
-    <!-- Tailwind CSS v4 -->
+    <!-- Tailwind CSS v4 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
-    <!-- Library Pendukung -->
+    <!-- Library Dependensi Eksternal -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <!-- Chart.js untuk Visualisasi Data -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF & AutoTable untuk Ekspor Laporan Instan -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        .bg-maroon {
-            background-color: #800000;
-        }
-
-        .text-maroon {
-            color: #800000;
-        }
-
-        .border-maroon {
-            border-color: #800000;
-        }
-
+        .bg-maroon { background-color: #800000; }
+        .text-maroon { color: #800000; }
+        .border-maroon { border-color: #800000; }
         .btn-maroon {
             background-color: #800000;
             color: white;
             transition: background 0.2s;
         }
+        .btn-maroon:hover { background-color: #600000; }
 
-        .btn-maroon:hover {
-            background-color: #600000;
-        }
+        /* Sembunyikan scrollbar di menu navigasi HP agar lebih rapi */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+
+    <!-- Favicon & PWA Theme Metadata -->
+    <link rel="icon" type="image/png" href="3.png">
+    <link rel="apple-touch-icon" href="3.png">
+    <meta name="theme-color" content="#800000">
+    <link rel="manifest" href="manifest.json">
 </head>
-<!-- Favicon & Mobile Theme -->
-<link rel="icon" type="image/png" href="3.png">
-<link rel="apple-touch-icon" href="3.png">
-<meta name="theme-color" content="#800000">
-<!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json">
 
 <body class="bg-slate-100 min-h-screen text-slate-800 antialiased pb-12">
 
-    <!-- HEADER / NAVBAR -->
+    <!-- HEADER / NAVBAR NAVIGASI UTAMA -->
     <header class="bg-[#800000] text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
 
-            <div onclick="switchTab('home')" class="flex items-center gap-3 cursor-pointer group">
+            <!-- Logo & Identitas Organisasi -->
+            <div onclick="switchTab('home')" class="flex items-center gap-3 cursor-pointer group w-full md:w-auto">
                 <img src="1.png" alt="Logo MBUMM"
-                    class="w-11 h-11 object-contain rounded-full bg-white p-1 shadow-md group-hover:scale-105 transition">
+                    class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-full bg-white p-1 shadow-md group-hover:scale-105 transition shrink-0">
                 <div>
-                    <h1 class="text-xl font-black tracking-wide group-hover:text-amber-300 transition">MARCHING BAND UMM
-                    </h1>
-                    <p class="text-xs text-red-200">March For Victory • Cloud Attendance System</p>
+                    <h1 class="text-lg sm:text-xl font-black tracking-wide group-hover:text-amber-300 transition leading-tight">MARCHING BAND UMM</h1>
+                    <p class="text-[10px] sm:text-xs text-red-200">March For Victory • Cloud Attendance System</p>
                 </div>
             </div>
 
-            <nav class="flex flex-wrap gap-1 bg-red-950/40 p-1.5 rounded-2xl border border-red-900 items-center">
+            <!-- Tombol Navigasi Tab (Scrollable di HP) -->
+            <nav class="flex flex-nowrap md:flex-wrap overflow-x-auto w-full md:w-auto pb-1 md:pb-0 gap-1.5 bg-red-950/40 p-1.5 rounded-2xl border border-red-900/60 items-center no-scrollbar">
                 <a href="scanner.html" target="_blank"
-                    class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow">
+                    class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow shrink-0 whitespace-nowrap">
                     📷 Scanner
                 </a>
                 <button onclick="switchTab('home')"
-                    class="tab-btn bg-white text-maroon shadow px-3.5 py-2 rounded-xl text-xs font-bold transition"
+                    class="tab-btn bg-white text-maroon shadow px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
                     data-target="home">🏠 Home</button>
                 <button onclick="switchTab('players')"
-                    class="tab-btn text-white hover:bg-red-900 px-3.5 py-2 rounded-xl text-xs font-bold transition"
+                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
                     data-target="players">👥 Master Player</button>
                 <button onclick="switchTab('qr')"
-                    class="tab-btn text-white hover:bg-red-900 px-3.5 py-2 rounded-xl text-xs font-bold transition"
+                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
                     data-target="qr">🏷️ Generator QR</button>
                 <button onclick="switchTab('setting')"
-                    class="tab-btn text-white hover:bg-red-900 px-3.5 py-2 rounded-xl text-xs font-bold transition"
+                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
                     data-target="setting">⚙️ Setting</button>
                 <button onclick="switchTab('report')"
-                    class="tab-btn text-white hover:bg-red-900 px-3.5 py-2 rounded-xl text-xs font-bold transition"
+                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
                     data-target="report">📊 Live Report</button>
             </nav>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 mt-6">
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
 
-        <!-- STATUS BANNER -->
+        <!-- BANNER STATUS SESI LATIHAN AKTIF -->
         <div id="attendanceStatusBanner"
-            class="mb-6 p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border-slate-200">
+            class="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border-slate-200">
             <div class="flex items-center gap-3">
-                <div id="statusDot" class="w-3.5 h-3.5 rounded-full bg-slate-400"></div>
+                <div id="statusDot" class="w-3.5 h-3.5 rounded-full bg-slate-400 shrink-0"></div>
                 <div>
-                    <h2 id="statusTitle" class="text-sm font-bold text-slate-700">Memuat Status Sesi...</h2>
-                    <p id="statusDesc" class="text-xs text-slate-500">Mengecek jadwal latihan hari ini.</p>
+                    <h2 id="statusTitle" class="text-xs sm:text-sm font-bold text-slate-700">Memuat Status Sesi...</h2>
+                    <p id="statusDesc" class="text-[11px] sm:text-xs text-slate-500">Mengecek jadwal latihan hari ini.</p>
                 </div>
             </div>
-            <div class="text-xs font-mono font-bold bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            <div class="text-[11px] sm:text-xs font-mono font-bold bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 w-full sm:w-auto text-center">
                 Jam Aktif: <span id="statusHours" class="text-[#800000]">-</span>
             </div>
         </div>
 
-        <!-- ================= TAB 0: HOME (MINIMALIS & GRADIENT GELAP) ================= -->
+        <!-- TAB 0: HOME -->
         <div id="tab-home" class="tab-content space-y-6">
-            <div
-                class="relative overflow-hidden bg-gradient-to-br from-[#800000] via-red-950 to-slate-950 text-white rounded-3xl p-8 sm:p-16 shadow-2xl border border-red-900/50 text-center space-y-6">
-                <!-- Efek cahaya latar belakang -->
-                <div
-                    class="absolute -top-24 -left-24 w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none">
-                </div>
-                <div
-                    class="absolute -bottom-24 -right-24 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none">
-                </div>
-
-                <div class="relative z-10 max-w-3xl mx-auto space-y-6 py-6">
-                    <div
-                        class="inline-flex items-center gap-2 bg-amber-400 text-slate-950 px-4 py-1.5 rounded-full text-[11px] font-black tracking-widest uppercase shadow-lg">
+            <div class="relative overflow-hidden bg-gradient-to-br from-[#800000] via-red-950 to-slate-950 text-white rounded-3xl p-6 sm:p-12 shadow-2xl border border-red-900/50 text-center space-y-6">
+                <div class="relative z-10 max-w-3xl mx-auto space-y-4 sm:space-y-6 py-2 sm:py-6">
+                    <div class="inline-flex items-center gap-2 bg-amber-400 text-slate-950 px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black tracking-widest uppercase shadow-lg">
                         ⭐ Official Dashboard Absensi MB UMM
                     </div>
-
-                    <h1
-                        class="text-4xl sm:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-red-100 to-amber-300 drop-shadow-lg">
+                    <h1 class="text-3xl sm:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-red-100 to-amber-300 drop-shadow-lg">
                         MARCH FOR VICTORY
                     </h1>
-
-                    <p class="text-sm sm:text-base text-red-100 font-medium leading-relaxed max-w-2xl mx-auto">
-                        Sistem management kehadiran digital, generator QR code, dan live report kehadiran anggota MB
-                        UMM.
+                    <p class="text-xs sm:text-base text-red-100 font-medium leading-relaxed max-w-2xl mx-auto">
+                        Sistem manajemen kehadiran digital, generator QR code, dan live report kehadiran anggota Marching Band Universitas Muhammadiyah Malang.
                     </p>
-
-                    <div class="flex flex-wrap justify-center gap-4 pt-4">
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2 sm:pt-4">
                         <a href="scanner.html" target="_blank"
-                            class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-7 py-3.5 rounded-2xl text-sm font-black shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                            class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-6 py-3 rounded-2xl text-xs sm:text-sm font-black shadow-xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                             📷 Buka Scanner
                         </a>
                         <button onclick="switchTab('report')"
-                            class="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-7 py-3.5 rounded-2xl text-sm font-bold backdrop-blur-md transition shadow-lg">
+                            class="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold backdrop-blur-md transition shadow-lg">
                             📊 Live Report
                         </button>
-                    </div>
-
-                    <!-- Alur Absensi Glassmorphism -->
-                    <div
-                        class="flex flex-col sm:flex-row justify-center items-center gap-4 pt-12 text-white font-bold text-[10px] sm:text-xs uppercase tracking-widest">
-
-                        <!-- Box 1: Generate -->
-                        <div
-                            class="bg-white/10 border border-white/20 px-6 py-5 rounded-3xl flex flex-col items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-md hover:bg-white/20 hover:border-amber-300/50 hover:scale-105 transition-all transform w-full sm:w-36 group cursor-default">
-                            <!-- Icon QR Code SVG -->
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                class="w-10 h-10 text-white drop-shadow-lg group-hover:scale-110 transition-transform group-hover:text-amber-300"
-                                viewBox="0 0 16 16">
-                                <path d="M2 2h2v2H2V2Z" />
-                                <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z" />
-                                <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z" />
-                                <path
-                                    d="M10 0v6h6V0h-6Zm5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1Zm0 0h3v1h-2v1h-1v-2Zm-4-1v1h1v-2H7v1h2Z" />
-                                <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z" />
-                            </svg>
-                            <span class="text-center text-slate-200 group-hover:text-amber-300 transition-colors">1.
-                                Generate</span>
-                        </div>
-
-                        <span class="hidden sm:block text-amber-400/50 text-2xl animate-pulse">➔</span>
-
-                        <!-- Box 2: Scan -->
-                        <div
-                            class="bg-white/10 border border-white/20 px-6 py-5 rounded-3xl flex flex-col items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-md hover:bg-white/20 hover:border-amber-300/50 hover:scale-105 transition-all transform w-full sm:w-36 group cursor-default">
-                            <!-- Icon Camera / Scanner SVG -->
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                class="w-10 h-10 text-white drop-shadow-lg group-hover:scale-110 transition-transform group-hover:text-amber-300"
-                                viewBox="0 0 16 16">
-                                <path
-                                    d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1v6zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2z" />
-                                <path
-                                    d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z" />
-                            </svg>
-                            <span class="text-center text-slate-200 group-hover:text-amber-300 transition-colors">2.
-                                Scan</span>
-                        </div>
-
-                        <span class="hidden sm:block text-amber-400/50 text-2xl animate-pulse">➔</span>
-
-                        <!-- Box 3: Rekap -->
-                        <div
-                            class="bg-white/10 border border-white/20 px-6 py-5 rounded-3xl flex flex-col items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-md hover:bg-white/20 hover:border-amber-300/50 hover:scale-105 transition-all transform w-full sm:w-36 group cursor-default">
-                            <!-- Icon Chart / Data Rekap SVG -->
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                class="w-10 h-10 text-white drop-shadow-lg group-hover:scale-110 transition-transform group-hover:text-amber-300"
-                                viewBox="0 0 16 16">
-                                <path
-                                    d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z" />
-                            </svg>
-                            <span class="text-center text-slate-200 group-hover:text-amber-300 transition-colors">3.
-                                Rekap</span>
-                        </div>
-
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 1: MASTER PLAYERS ================= -->
+        <!-- TAB 1: MASTER PLAYERS -->
         <div id="tab-players" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-                    <h2 class="text-sm font-bold text-[#800000]">➕ Tambah Player Manual</h2>
+                <!-- Form Input Player Manual -->
+                <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                    <h2 class="text-xs sm:text-sm font-bold text-[#800000]">➕ Tambah Player Manual</h2>
                     <form id="addPlayerForm" class="space-y-3 text-xs">
                         <div>
                             <label class="block font-semibold mb-1">ID Player</label>
-                            <input type="text" id="pId" required placeholder="Contoh: MB001"
-                                class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono">
+                            <input type="text" id="pId" required placeholder="Contoh: MB001" class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono">
                         </div>
                         <div>
                             <label class="block font-semibold mb-1">Nama Lengkap</label>
-                            <input type="text" id="pName" required placeholder="Nama anggota..."
-                                class="w-full border rounded-xl p-2.5 bg-slate-50">
+                            <input type="text" id="pName" required placeholder="Nama anggota..." class="w-full border rounded-xl p-2.5 bg-slate-50">
                         </div>
                         <div>
                             <label class="block font-semibold mb-1">Section</label>
@@ -236,47 +163,35 @@
                         </div>
                         <div>
                             <label class="block font-semibold mb-1">NIM (Opsional)</label>
-                            <input type="text" id="pNim" placeholder="Nomor induk mahasiswa"
-                                class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono">
+                            <input type="text" id="pNim" placeholder="Nomor Induk Mahasiswa" class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono">
                         </div>
                         <div>
                             <label class="block font-semibold mb-1">Email (Opsional)</label>
-                            <input type="email" id="pEmail" placeholder="email@domain.com"
-                                class="w-full border rounded-xl p-2.5 bg-slate-50">
+                            <input type="email" id="pEmail" placeholder="email@domain.com" class="w-full border rounded-xl p-2.5 bg-slate-50">
                         </div>
-                        <button type="submit"
-                            class="w-full btn-maroon py-3 rounded-xl font-bold shadow transition cursor-pointer">Simpan
-                            Player</button>
+                        <button type="submit" class="w-full btn-maroon py-3 rounded-xl font-bold shadow transition cursor-pointer">Simpan Player</button>
                     </form>
                 </div>
 
-                <div class="md:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                <!-- Impor Excel & Tabel Daftar Player -->
+                <div class="md:col-span-2 bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
-                            <h2 class="text-sm font-bold text-[#800000]">📁 Impor Excel & Daftar Player</h2>
-                            <p class="text-xs text-slate-500">Impor data massal menggunakan file Excel (.xlsx).</p>
+                            <h2 class="text-xs sm:text-sm font-bold text-[#800000]">📁 Impor Excel & Daftar Player</h2>
+                            <p class="text-[11px] text-slate-500">Impor data massal menggunakan file Excel (.xlsx).</p>
                         </div>
-                        <button onclick="manualRefreshPlayers()"
-                            class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold transition">🔄
-                            Refresh Data Player</button>
+                        <button onclick="manualRefreshPlayers()" class="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-2 rounded-xl text-xs font-bold transition">🔄 Refresh Data Player</button>
                     </div>
 
-                    <div
-                        class="flex flex-col sm:flex-row items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                        <input type="file" id="excelFile" accept=".xlsx, .xls"
-                            class="text-xs w-full text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#800000] file:text-white hover:file:bg-red-900 cursor-pointer">
-                        <button onclick="handleExcelUpload()"
-                            class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">📥
-                            Unggah ke Cloud</button>
+                    <div class="flex flex-col sm:flex-row items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                        <input type="file" id="excelFile" accept=".xlsx, .xls" class="text-xs w-full text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#800000] file:text-white hover:file:bg-red-900 cursor-pointer">
+                        <button onclick="handleExcelUpload()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">📥 Unggah ke Cloud</button>
                     </div>
 
-                    <!-- FILTER & PENCARIAN MASTER PLAYER -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 border-t border-slate-100 mt-2">
-                        <input type="text" id="filterPlayerSearch" oninput="loadPlayersTable()"
-                            placeholder="Cari Nama atau ID Player..."
-                            class="border rounded-xl p-2.5 text-xs bg-slate-50 focus:border-[#800000] outline-none">
-                        <select id="filterPlayerSection" onchange="loadPlayersTable()"
-                            class="border rounded-xl p-2.5 text-xs bg-slate-50 focus:border-[#800000] outline-none">
+                    <!-- Filter & Pencarian Player -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 py-2 border-t border-slate-100 mt-2">
+                        <input type="text" id="filterPlayerSearch" oninput="loadPlayersTable()" placeholder="Cari Nama atau ID Player..." class="border rounded-xl p-2.5 text-xs bg-slate-50 focus:border-[#800000] outline-none">
+                        <select id="filterPlayerSection" onchange="loadPlayersTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50 focus:border-[#800000] outline-none">
                             <option value="">Semua Section</option>
                             <option value="Brass">Brass</option>
                             <option value="Battery">Battery</option>
@@ -286,22 +201,20 @@
                         </select>
                     </div>
 
-                    <div class="overflow-x-auto border rounded-2xl">
-                        <table class="w-full text-left text-xs">
+                    <div class="overflow-x-auto border rounded-2xl no-scrollbar">
+                        <table class="w-full text-left text-xs min-w-[550px]">
                             <thead class="bg-slate-50 border-b text-slate-700">
                                 <tr>
-                                    <th class="p-3">ID</th>
-                                    <th class="p-3">Nama</th>
-                                    <th class="p-3">Section</th>
-                                    <th class="p-3">NIM</th>
-                                    <th class="p-3">Email</th>
-                                    <th class="p-3 text-center">Aksi</th>
+                                    <th class="p-3 whitespace-nowrap">ID</th>
+                                    <th class="p-3 whitespace-nowrap">Nama</th>
+                                    <th class="p-3 whitespace-nowrap">Section</th>
+                                    <th class="p-3 whitespace-nowrap">NIM</th>
+                                    <th class="p-3 whitespace-nowrap">Email</th>
+                                    <th class="p-3 text-center whitespace-nowrap">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="playerTableBody" class="divide-y divide-slate-100">
-                                <tr>
-                                    <td colspan="6" class="p-4 text-center text-slate-400">Memuat data...</td>
-                                </tr>
+                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -309,33 +222,27 @@
             </div>
         </div>
 
-        <!-- ================= TAB 2: GENERATOR QR ================= -->
+        <!-- TAB 2: GENERATOR QR CODE -->
         <div id="tab-qr" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h2 class="text-sm font-bold text-[#800000]">🏷️ Katalog & Generator QR Code Kartu</h2>
-                        <p class="text-xs text-slate-500">Cetak atau unduh QR Code berlogo untuk setiap anggota.</p>
+                        <h2 class="text-xs sm:text-sm font-bold text-[#800000]">🏷️ Katalog & Generator QR Code Kartu</h2>
+                        <p class="text-[11px] text-slate-500">Cetak atau unduh QR Code berlogo untuk setiap anggota.</p>
                     </div>
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <!-- TAMBAHAN: Tombol Copy Link Portal -->
-                        <button onclick="copyPortalLink()"
-                            class="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-300 transition shadow-sm">
+                        <button onclick="copyPortalLink()" class="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-xs font-bold border border-slate-300 transition shadow-sm whitespace-nowrap">
                             🔗 Copy Link Portal
                         </button>
-                        <button onclick="downloadAllQRZip()"
-                            class="flex-1 sm:flex-none btn-maroon px-4 py-2.5 rounded-xl text-xs font-bold shadow transition">📦
-                            Download Semua (ZIP)
+                        <button onclick="downloadAllQRZip()" class="flex-1 sm:flex-none btn-maroon px-3.5 py-2.5 rounded-xl text-xs font-bold shadow transition whitespace-nowrap">
+                            📦 Download Semua (ZIP)
                         </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <input type="text" id="filterQrSearch" oninput="loadQRTable()"
-                        placeholder="Cari berdasarkan Nama atau ID..."
-                        class="border rounded-xl p-2.5 text-xs bg-slate-50">
-                    <select id="filterQrSection" onchange="loadQRTable()"
-                        class="border rounded-xl p-2.5 text-xs bg-slate-50">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                    <input type="text" id="filterQrSearch" oninput="loadQRTable()" placeholder="Cari berdasarkan Nama atau ID..." class="border rounded-xl p-2.5 text-xs bg-slate-50">
+                    <select id="filterQrSection" onchange="loadQRTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50">
                         <option value="">Semua Section</option>
                         <option value="Brass">Brass</option>
                         <option value="Battery">Battery</option>
@@ -345,58 +252,44 @@
                     </select>
                 </div>
 
-                <div class="overflow-x-auto border rounded-2xl">
-                    <table class="w-full text-left text-xs">
+                <div class="overflow-x-auto border rounded-2xl no-scrollbar">
+                    <table class="w-full text-left text-xs min-w-[500px]">
                         <thead class="bg-slate-50 border-b text-slate-700">
                             <tr>
-                                <th class="p-3">ID</th>
-                                <th class="p-3">Nama</th>
-                                <th class="p-3">Section</th>
-                                <th class="p-3 text-center">Aksi Kartu</th>
+                                <th class="p-3 whitespace-nowrap">ID</th>
+                                <th class="p-3 whitespace-nowrap">Nama</th>
+                                <th class="p-3 whitespace-nowrap">Section</th>
+                                <th class="p-3 text-center whitespace-nowrap">Aksi Kartu</th>
                             </tr>
                         </thead>
                         <tbody id="qrTableBody" class="divide-y divide-slate-100">
-                            <tr>
-                                <td colspan="4" class="p-4 text-center text-slate-400">Memuat data...</td>
-                            </tr>
+                            <tr><td colspan="4" class="p-4 text-center text-slate-400">Memuat data...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 3: LIVE REPORT ================= -->
+        <!-- TAB 3: LIVE REPORT -->
         <div id="tab-report" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+            <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <div>
-                        <h2 class="text-sm font-bold text-[#800000]">📊 Live Report Kehadiran Sesi Latihan</h2>
-                        <p class="text-xs text-slate-500">Pantau dan kelola data absensi harian secara langsung dari
-                            Cloud.</p>
+                        <h2 class="text-xs sm:text-sm font-bold text-[#800000]">📊 Live Report Kehadiran Sesi Latihan</h2>
+                        <p class="text-[11px] text-slate-500">Pantau dan kelola data absensi harian secara langsung dari Cloud.</p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <input type="date" id="reportDate" onchange="loadReportData(true)"
-                            class="border rounded-xl p-2 text-xs font-bold bg-slate-50">
-                        <button onclick="loadReportData(true)"
-                            class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition">🔄
-                            Refresh Data</button>
-                        <button onclick="checkUnattendedPlayers(this)"
-                            class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm">⚠️
-                            Cek Belum Hadir</button>
-                        <button onclick="exportToPDF()"
-                            class="bg-[#800000] hover:bg-red-900 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm">📄
-                            Ekspor PDF</button>
-                        <button onclick="clearDailyAttendance()"
-                            class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-xl text-xs font-bold transition">🗑️
-                            Kosongkan Tab</button>
+                    <!-- Control Buttons Responsif -->
+                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
+                        <input type="date" id="reportDate" onchange="loadReportData(true)" class="col-span-2 sm:col-span-1 border rounded-xl p-2 text-xs font-bold bg-slate-50">
+                        <button onclick="loadReportData(true)" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition">🔄 Refresh</button>
+                        <button onclick="checkUnattendedPlayers(this)" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap">⚠️ Belum Hadir</button>
+                        <button onclick="exportToPDF()" class="col-span-2 sm:col-span-1 bg-[#800000] hover:bg-red-900 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm">📄 Ekspor PDF</button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                    <input type="text" id="filterSearch" oninput="renderReportTable()" placeholder="Cari Nama / ID..."
-                        class="border rounded-xl p-2.5 text-xs bg-slate-50">
-                    <select id="filterSection" onchange="renderReportTable()"
-                        class="border rounded-xl p-2.5 text-xs bg-slate-50">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                    <input type="text" id="filterSearch" oninput="renderReportTable()" placeholder="Cari Nama / ID..." class="border rounded-xl p-2.5 text-xs bg-slate-50">
+                    <select id="filterSection" onchange="renderReportTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50">
                         <option value="">Semua Section</option>
                         <option value="Brass">Brass</option>
                         <option value="Battery">Battery</option>
@@ -404,8 +297,7 @@
                         <option value="Color Guard">Color Guard</option>
                         <option value="Field Commander">Field Commander</option>
                     </select>
-                    <select id="filterStatus" onchange="renderReportTable()"
-                        class="border rounded-xl p-2.5 text-xs bg-slate-50">
+                    <select id="filterStatus" onchange="renderReportTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50">
                         <option value="">Semua Status</option>
                         <option value="Hadir">Hadir</option>
                         <option value="Terlambat">Terlambat</option>
@@ -414,51 +306,45 @@
                         <option value="Alpa">Alpa</option>
                     </select>
                 </div>
-                <!-- Area Chart Analytics -->
-                <div class="w-full h-48 mb-4 bg-slate-50 rounded-2xl border border-slate-200 p-2 hidden sm:block">
+
+                <div class="w-full h-44 sm:h-48 mb-4 bg-slate-50 rounded-2xl border border-slate-200 p-2">
                     <canvas id="attendanceChart"></canvas>
                 </div>
-                <div class="overflow-x-auto border rounded-2xl">
-                    <table class="w-full text-left text-xs">
+
+                <div class="overflow-x-auto border rounded-2xl no-scrollbar">
+                    <table class="w-full text-left text-xs min-w-[620px]">
                         <thead class="bg-slate-50 border-b text-slate-700">
                             <tr>
-                                <th class="p-3">Waktu Scan</th>
-                                <th class="p-3">ID</th>
-                                <th class="p-3">Nama</th>
-                                <th class="p-3">Section</th>
-                                <th class="p-3">Status</th>
-                                <th class="p-3 text-center">Kelola Status & Hapus</th>
+                                <th class="p-3 whitespace-nowrap">Waktu Scan</th>
+                                <th class="p-3 whitespace-nowrap">ID</th>
+                                <th class="p-3 whitespace-nowrap">Nama</th>
+                                <th class="p-3 whitespace-nowrap">Section</th>
+                                <th class="p-3 whitespace-nowrap">Status</th>
+                                <th class="p-3 text-center whitespace-nowrap">Kelola Status & Hapus</th>
                             </tr>
                         </thead>
                         <tbody id="reportTableBody" class="divide-y divide-slate-100">
-                            <tr>
-                                <td colspan="6" class="p-4 text-center text-slate-400">Pilih tanggal atau muat data...
-                                </td>
-                            </tr>
+                            <tr><td colspan="6" class="p-4 text-center text-slate-400">Pilih tanggal atau muat data...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 4: SETTING ================= -->
+        <!-- TAB 4: SETTING -->
         <div id="tab-setting" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 max-w-xl mx-auto space-y-4">
-                <h2 class="text-sm font-bold text-[#800000]">⚙️ Pengaturan Jadwal & Cloud API</h2>
-                <p class="text-xs text-slate-500">Tentukan jadwal aktif sesi latihan serta tautan Google Apps Script
-                    Anda.</p>
+            <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 max-w-xl mx-auto space-y-4">
+                <h2 class="text-xs sm:text-sm font-bold text-[#800000]">⚙️ Pengaturan Jadwal & Cloud API</h2>
+                <p class="text-[11px] text-slate-500">Tentukan jadwal aktif sesi latihan serta tautan Google Apps Script Anda.</p>
 
-                <div class="space-y-3 text-xs pt-2">
-                    <!-- TAMBAHAN: Judul Kegiatan -->
+                <div class="space-y-3 text-xs pt-1">
                     <div>
                         <label class="block font-semibold mb-1">Judul Jenis Kegiatan</label>
-                        <input type="text" id="settingEventTitle" placeholder="Contoh: Latihan Rutin, TC, Tampil..."
-                            class="w-full border rounded-xl p-2.5 bg-slate-50 font-bold text-[#800000]">
+                        <input type="text" id="settingEventTitle" placeholder="Contoh: Latihan Rutin, TC..." class="w-full border rounded-xl p-2.5 bg-slate-50 font-bold text-[#800000]">
                     </div>
                     <div>
                         <label class="block font-semibold mb-1">Tanggal Sesi Latihan</label>
-                        <input type="date" id="settingDate"
-                            class="w-full border rounded-xl p-2.5 bg-slate-50 font-bold">
+                        <input type="date" id="settingDate" class="w-full border rounded-xl p-2.5 bg-slate-50 font-bold">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -470,76 +356,58 @@
                             <input type="time" id="settingCloseTime" class="w-full border rounded-xl p-2.5 bg-slate-50">
                         </div>
                     </div>
-                    <div class="pt-4 border-t border-slate-200 mt-4">
+                    <div class="pt-3 border-t border-slate-200 mt-4">
                         <label class="block font-semibold mb-1 text-slate-400">🔗 Database URL (Sistem)</label>
-                        <input type="text" id="settingScriptUrl" placeholder="Membaca konfigurasi sistem..."
-                            class="w-full border rounded-xl p-2.5 bg-slate-100 text-slate-500 font-mono text-[10px] cursor-not-allowed"
-                            readonly>
-                        <p class="text-[10px] text-slate-400 mt-1">*URL Database telah diatur secara otomatis oleh
-                            sistem (Default Fallback).</p>
+                        <input type="text" id="settingScriptUrl" class="w-full border rounded-xl p-2.5 bg-slate-100 text-slate-500 font-mono text-[10px] cursor-not-allowed" readonly>
                     </div>
-                    <button onclick="saveSettings()"
-                        class="w-full btn-maroon py-3 mt-2 rounded-xl font-bold shadow transition cursor-pointer">Simpan
-                        Pengaturan</button>
+                    <button onclick="saveSettings()" class="w-full btn-maroon py-3 mt-2 rounded-xl font-bold shadow transition cursor-pointer">Simpan Pengaturan</button>
 
-                    <!-- Tombol Refresh & Nonaktifkan Sesi -->
-                    <div class="grid grid-cols-2 gap-2 pt-2">
-                        <button onclick="manualRefreshSettings()"
-                            class="bg-slate-200 hover:bg-slate-300 text-slate-800 py-2.5 rounded-xl font-bold text-xs transition">
-                            🔄 Refresh Data
-                        </button>
-                        <button onclick="resetActiveSettings()"
-                            class="bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl font-bold text-xs transition border border-red-200">
-                            ❌ Nonaktifkan Sesi
-                        </button>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button onclick="manualRefreshSettings()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 py-2.5 rounded-xl font-bold text-xs transition">🔄 Refresh Data</button>
+                        <button onclick="resetActiveSettings()" class="bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl font-bold text-xs transition border border-red-200">❌ Nonaktifkan Sesi</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- FOOTER DASHBOARD -->
-        <footer class="mt-16 border-t border-slate-200/60 pt-8 pb-4">
-            <div class="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center gap-3 text-center">
-                <!-- Logo & Judul Redup -->
-                <div class="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity cursor-default">
+        <!-- FOOTER -->
+        <footer class="mt-12 sm:mt-16 border-t border-slate-200/60 pt-6 pb-4">
+            <div class="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center gap-2 text-center">
+                <div class="flex items-center gap-2 opacity-60">
                     <img src="1.png" alt="Logo MBUMM" class="w-5 h-5 grayscale">
-                    <span class="text-[11px] font-black tracking-widest text-slate-700 uppercase">March For
-                        Victory</span>
+                    <span class="text-[11px] font-black tracking-widest text-slate-700 uppercase">March For Victory</span>
                 </div>
-                <!-- Copyright & Developer Credit -->
                 <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-relaxed">
-                    © 2026 Marching Band Universitas Muhammadiyah Malang. All rights reserved.<br>
-                    Cloud Attendance System v1.0 • Dikembangkan oleh Luthfin Ramadhani Tuadingo
+                    © 2026 Marching Band Universitas Muhammadiyah Malang.<br>
+                    Cloud Attendance System v1.0 • Luthfin Ramadhani Tuadingo
                 </p>
             </div>
         </footer>
     </main>
 
-    <!-- MODAL CEK ANGGOTA BELUM HADIR -->
-    <div id="unattendedModal"
-        class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
-            <div class="flex justify-between items-center border-b pb-3">
+    <!-- MODAL CEK ANGGOTA BELUM HADIR (Responsif HP) -->
+    <div id="unattendedModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg sm:max-w-2xl w-full p-4 sm:p-6 space-y-3 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-2.5">
                 <div>
-                    <h3 class="text-sm font-bold text-[#800000]">Daftar Anggota Belum Hadir</h3>
-                    <p id="unattendedModalSubtitle" class="text-xs text-slate-500">-</p>
+                    <h3 class="text-xs sm:text-sm font-bold text-[#800000]">Daftar Anggota Belum Hadir</h3>
+                    <p id="unattendedModalSubtitle" class="text-[11px] text-slate-500">-</p>
                 </div>
-                <button onclick="closeUnattendedModal()"
-                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">✕</button>
+                <button onclick="closeUnattendedModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center shrink-0">✕</button>
             </div>
-            <div id="unattendedModalContent" class="overflow-y-auto flex-1 pr-1">
+            <div id="unattendedModalContent" class="overflow-y-auto flex-1 pr-1 no-scrollbar">
                 <p class="text-xs text-slate-400 text-center py-6">Memuat...</p>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT UTAMA DASHBOARD -->
-    <script src="js/app.js?v=1.0"></script>
+    <!-- Container Toast Notification -->
+    <div id="toast-container" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <!-- Script Utama Dashboard -->
+    <script src="js/app.js?v=1.1"></script>
 
-    <!-- PWA SERVICE WORKER REGISTRATION -->
+    <!-- Registrasi Service Worker PWA -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

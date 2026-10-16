@@ -1,0 +1,355 @@
+/**
+ * ==============================================================================
+ * MARCH FOR VICTORY - CLOUD ATTENDANCE SYSTEM (BACKEND API)
+ * Unit Activity: Marching Band Universitas Muhammadiyah Malang
+ * Developer    : Luthfin Ramadhani Tuadingo
+ * File         : Kode.gs
+ * ==============================================================================
+ * Deskripsi    : Endpoint Web App yang menangani REST-like JSON API untuk
+ *                manajemen data player, presensi harian, pengaturan jadwal,
+ *                serta pencegahan duplikasi scan berbasis LockService.
+ * ==============================================================================
+ */
+
+function doGet(e) {
+  // Menggunakan LockService untuk mencegah Concurrency Issue / Race Condition saat banyak orang scan bersamaan
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000); // Tunggu hingga 10 detik jika ada request yang berbarengan
+
+  try {
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var action = e.parameter.action || 'save'; // Default action: Simpan Presensi Harian
+    
+    // --------------------------------------------------------------------------
+    // ACTION 1: MEMBACA DATA DAFTAR PLAYER (MASTER PLAYERS)
+    // --------------------------------------------------------------------------
+    if (action === 'getPlayers') {
+      var sheet = spreadsheet.getSheetByName('Master_Players');
+      if (!sheet) {
+        sheet = spreadsheet.insertSheet('Master_Players');
+        setupPlayerHeader(sheet);
+        return ContentService.createTextOutput(JSON.stringify({ result: "success", data: [] }))
+              .setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      var lastRow = sheet.getLastRow();
+      var rows = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 5).getValues() : [];
+      var players = [];
+      
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        if (r[0] !== "") {
+          players.push({
+            Id: String(r[0]),
+            Nama: String(r[1]),
+            Section: String(r[2]),
+            NIM: String(r[3]),
+            Email: String(r[4])
+          });
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ result: "success", data: players }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // --------------------------------------------------------------------------
+    // ACTION 2: MENAMBAH / MENYIMPAN PLAYER BARU KE MASTER PLAYERS
+    // --------------------------------------------------------------------------
+    if (action === 'savePlayer') {
+      var sheet = spreadsheet.getSheetByName('Master_Players');
+      if (!sheet) {
+        sheet = spreadsheet.insertSheet('Master_Players');
+        setupPlayerHeader(sheet);
+      }
+      
+      var id = e.parameter.id;
+      var nama = e.parameter.nama;
+      var section = e.parameter.section;
+      var nim = e.parameter.nim || '';
+      var email = e.parameter.email || '';
+      
+      // Cek duplikasi ID di Master Player
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) {
+        if (String(rows[i][0]) === String(id)) {
+          return ContentService.createTextOutput(JSON.stringify({ result: "duplicate" }))
+                .setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+      
+      // Tambahkan petik tunggal (') agar ID/NIM yang diawali angka 0 tidak hilang
+      sheet.appendRow(["'" + id, nama, section, "'" + nim, email]);
+      formatPlayerRow(sheet, sheet.getLastRow());
+      
+      return ContentService.createTextOutput(JSON.stringify({ result: "success" }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // --------------------------------------------------------------------------
+    // ACTION 3: MENGHAPUS PLAYER DARI MASTER PLAYERS
+    // --------------------------------------------------------------------------
+    if (action === 'deletePlayer') {
+      var sheet = spreadsheet.getSheetByName('Master_Players');
+      var targetId = e.parameter.id;
+      if (sheet) {
+        var rows = sheet.getDataRange().getValues();
+        for (var i = 1; i < rows.length; i++) {
+          if (String(rows[i][0]) === String(targetId)) {
+            sheet.deleteRow(i + 1);
+            break;
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ result: "success" }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // --------------------------------------------------------------------------
+    // ACTION 4: MEMBACA LAPORAN PRESENSI HARIAN (LIVE REPORT)
+    // --------------------------------------------------------------------------
+    if (action === 'getReport') {
+      var dateStr = e.parameter.date || Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd");
+      var sheet = spreadsheet.getSheetByName(dateStr);
+      
+      if (!sheet) {
+        return ContentService.createTextOutput(JSON.stringify({ result: "success", data: [] }))
+              .setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      var lastRow = sheet.getLastRow();
+      var rows = lastRow > 0 ? sheet.getRange(1, 1, lastRow, 5).getValues() : [];
+      var records = [];
+      
+      for (var i = 1; i < rows.length; i++) {
+        var row = rows[i];
+        if (row[1] !== "") { 
+          records.push({
+            Time: String(row[0]).replace(/'/g, ""),
+            Id: String(row[1]),
+            Nama: String(row[2]),
+            Section: String(row[3]),
+            Status: String(row[4])
+          });
+        }
+      }
+      
+      return ContentService.createTextOutput(JSON.stringify({ result: "success", data: records }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // --------------------------------------------------------------------------
+    // ACTION 5: MERUBAH STATUS PRESENSI INDIVIDU (MANUAL OVERRIDE)
+    // --------------------------------------------------------------------------
+    if (action === 'updateStatus') {
+      var dateStr = e.parameter.date;
+      var targetId = e.parameter.id;
+      var newStatus = e.parameter.status;
+      
+      var sheet = spreadsheet.getSheetByName(dateStr);
+      if (sheet) {
+        var rows = sheet.getDataRange().getValues();
+        for (var i = 1; i < rows.length; i++) {
+          if (String(rows[i][1]) === String(targetId)) {
+            sheet.getRange(i + 1, 5).setValue(newStatus);
+            break;
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ result: "success" }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // --------------------------------------------------------------------------
+    // ACTION 6: MENGHAPUS SATU BARIS RECORD PRESENSI HARIAN
+    // --------------------------------------------------------------------------
+    if (action === 'deleteRecord') {
+      var dateStr = e.parameter.date;
+      var targetId = e.parameter.id;
+      
+      var sheet = spreadsheet.getSheetByName(dateStr);
+      if (sheet) {
+        var rows = sheet.getDataRange().getValues();
+        for (var i = 1; i < rows.length; i++) {
+          if (String(rows[i][1]) === String(targetId)) {
+            sheet.deleteRow(i + 1);
+            break;
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ result: "success" }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // --------------------------------------------------------------------------
+    // ACTION 7: SIMPAN PENGATURAN JADWAL SESI LATIHAN (TAB SETTING)
+    // --------------------------------------------------------------------------
+    if (action === 'saveSettings') {
+      var sheet = spreadsheet.getSheetByName("Settings");
+      if (!sheet) {
+        sheet = spreadsheet.insertSheet("Settings");
+      }
+      
+      sheet.getRange(1, 1).setValue(e.parameter.eventTitle || "");
+      sheet.getRange(1, 2).setValue(e.parameter.date || "");
+      sheet.getRange(1, 3).setValue(e.parameter.openTime || "");
+      sheet.getRange(1, 4).setValue(e.parameter.closeTime || "");
+      
+      return ContentService.createTextOutput(JSON.stringify({ "result": "success" }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // --------------------------------------------------------------------------
+    // ACTION 8: MEMBACA PENGATURAN JADWAL SESI LATIHAN (TAB SETTING)
+    // --------------------------------------------------------------------------
+    if (action === 'getSettings') {
+      var sheet = spreadsheet.getSheetByName("Settings");
+      if (!sheet) {
+        return ContentService.createTextOutput(JSON.stringify({
+          "result": "success", 
+          "data": { eventTitle: "", date: "", openTime: "", closeTime: "" }
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      var rawDate = sheet.getRange(1, 2).getValue();
+      var formattedDate = "";
+      if (rawDate instanceof Date) {
+        // Ekstraksi format tanggal presisi yyyy-MM-dd tanpa pergeseran timezone
+        formattedDate = Utilities.formatDate(rawDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
+      } else if (rawDate) {
+        formattedDate = String(rawDate).split('T')[0];
+      }
+
+      var rawOpen = sheet.getRange(1, 3).getValue();
+      var formattedOpen = "";
+      if (rawOpen instanceof Date) {
+        formattedOpen = Utilities.formatDate(rawOpen, Session.getScriptTimeZone(), "HH:mm");
+      } else if (rawOpen) {
+        formattedOpen = String(rawOpen).substring(0, 5);
+      }
+
+      var rawClose = sheet.getRange(1, 4).getValue();
+      var formattedClose = "";
+      if (rawClose instanceof Date) {
+        formattedClose = Utilities.formatDate(rawClose, Session.getScriptTimeZone(), "HH:mm");
+      } else if (rawClose) {
+        formattedClose = String(rawClose).substring(0, 5);
+      }
+
+      var data = {
+        eventTitle: sheet.getRange(1, 1).getValue() || "",
+        date: formattedDate,
+        openTime: formattedOpen,
+        closeTime: formattedClose
+      };
+      
+      return ContentService.createTextOutput(JSON.stringify({ "result": "success", "data": data }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // --------------------------------------------------------------------------
+    // ACTION DEFAULT: MENYIMPAN DATA SCAN PRESENSI DARI SCANNER
+    // --------------------------------------------------------------------------
+    var id = e.parameter.id || '';
+    var nama = e.parameter.nama || '';
+    var section = e.parameter.section || '';
+    var status = e.parameter.status || '';
+    var timestamp = e.parameter.timestamp || ''; 
+    
+    // Nama sheet otomatis berupa tanggal "YYYY-MM-DD"
+    var sheetName = timestamp ? timestamp.split(' ')[0] : Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd");
+    var sheet = spreadsheet.getSheetByName(sheetName);
+    var isNewSheet = false;
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(sheetName);
+      isNewSheet = true;
+    }
+    
+    if (isNewSheet || sheet.getLastRow() === 0) {
+      setupSheetHeaderAndTheme(sheet);
+    }
+
+    // --- CEK DUPLIKASI SCAN (Maksimal 1 Kali Scan per Hari) ---
+    if (sheet.getLastRow() > 1) {
+      var idValues = sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues();
+      for (var i = 0; i < idValues.length; i++) {
+        if (String(idValues[i][0]) === String(id)) {
+          return ContentService
+            .createTextOutput(JSON.stringify({ "result": "duplicate", "activeSheet": sheetName }))
+            .setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    }
+
+    var formattedTimestamp = "'" + timestamp; 
+    sheet.appendRow([formattedTimestamp, id, nama, section, status]);
+    
+    // Styling otomatis baris baru di Google Sheets
+    var lastRow = sheet.getLastRow();
+    var dataRange = sheet.getRange(lastRow, 1, 1, 5);
+    dataRange.setBorder(true, true, true, true, true, true, "#cbd5e1", SpreadsheetApp.BorderStyle.SOLID);
+    dataRange.setFontFamily("Arial");
+    dataRange.setFontSize(10);
+    
+    // Zebra striping untuk kemudahan pembacaan data
+    if (lastRow % 2 === 0) {
+      dataRange.setBackground("#f8fafc");
+    } else {
+      dataRange.setBackground("#ffffff");
+    }
+
+    return ContentService
+          .createTextOutput(JSON.stringify({ "result": "success", "activeSheet": sheetName }))
+          .setMimeType(ContentService.MimeType.JSON);
+          
+  } catch (error) {
+    return ContentService
+          .createTextOutput(JSON.stringify({ "result": "error", "message": error.toString() }))
+          .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock(); // Selalu lepaskan lock sistem setelah eksekusi selesai
+  }
+}
+
+// ------------------------------------------------------------------------------
+// FUNGSI UTILITY & FORMATTING SHEET
+// ------------------------------------------------------------------------------
+
+/** Format Header Sheet Master Players */
+function setupPlayerHeader(sheet) {
+  var headerRange = sheet.getRange(1, 1, 1, 5);
+  headerRange.setValues([["ID", "Nama", "Section", "NIM", "Email"]]);
+  headerRange.setBackground("#800000"); // Maroon MB UMM
+  headerRange.setFontColor("#ffffff");
+  headerRange.setFontWeight("bold");
+  headerRange.setHorizontalAlignment("center");
+  headerRange.setFontFamily("Arial");
+  headerRange.setFontSize(11);
+  sheet.setFrozenRows(1);
+}
+
+/** Format Baris Baru Master Player */
+function formatPlayerRow(sheet, rowNum) {
+  var range = sheet.getRange(rowNum, 1, 1, 5);
+  range.setBorder(true, true, true, true, true, true, "#cbd5e1", SpreadsheetApp.BorderStyle.SOLID);
+  range.setFontFamily("Arial");
+  range.setFontSize(10);
+  if (rowNum % 2 === 0) {
+    range.setBackground("#f8fafc");
+  } else {
+    range.setBackground("#ffffff");
+  }
+}
+
+/** Format Header Sheet Presensi Harian */
+function setupSheetHeaderAndTheme(sheet) {
+  var headerRange = sheet.getRange(1, 1, 1, 5);
+  headerRange.setValues([["Waktu Scan", "ID", "Nama", "Section", "Status"]]);
+  headerRange.setBackground("#800000"); // Maroon MB UMM
+  headerRange.setFontColor("#ffffff");
+  headerRange.setFontWeight("bold");
+  headerRange.setHorizontalAlignment("center");
+  headerRange.setFontFamily("Arial");
+  headerRange.setFontSize(11);
+  sheet.setFrozenRows(1);
+}

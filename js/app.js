@@ -1,6 +1,14 @@
-// ==========================================
-// KONFIGURASI UTAMA APLIKASI
-// ==========================================
+/**
+ * ==============================================================================
+ * MARCH FOR VICTORY - CORE DASHBOARD APPLICATION LOGIC
+ * File : js/app.js
+ * ==============================================================================
+ * Deskripsi : Mengatur manajemen state pemain, generator QR code berlogo,
+ *             sinkronisasi Cloud Apps Script, live report, chart analytics,
+ *             ekspor PDF, serta penanganan PWA offline storage.
+ * ==============================================================================
+ */
+
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJGU8YPqreBWTFWKFr4l0p_BGrodkH_DIWX4Wooc3CIsjVbm7GNhV-g5bcwgPVEhas/exec"; 
 
 function getAppScriptUrl() {
@@ -10,12 +18,19 @@ function getAppScriptUrl() {
 
 function getLocalDateString() {
     const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+function getFormattedLocalDateTime() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+// ==========================================
+// 1. UI HELPER & TOAST NOTIFICATION
+// ==========================================
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     if(!container) return;
@@ -24,7 +39,7 @@ function showToast(message, type = 'success') {
     const bgClass = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-slate-800');
     const icon = type === 'success' ? '✅' : (type === 'error' ? '⚠️' : 'ℹ️');
     
-    toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-bold transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-2 max-w-xs w-full pointer-events-auto`;
+    toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-bold transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-2 max-w-sm w-full mx-auto sm:mx-0 pointer-events-auto`;
     toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
 
     container.appendChild(toast);
@@ -46,6 +61,9 @@ function setButtonLoading(button, isLoading, loadingText = "Memproses...") {
     }
 }
 
+// ==========================================
+// 2. NAVIGASI TAB & STATE SWITCHER
+// ==========================================
 function switchTab(targetId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     const targetElement = document.getElementById('tab-' + targetId);
@@ -71,6 +89,9 @@ function switchTab(targetId) {
     }
 }
 
+// ==========================================
+// 3. MASTER PLAYER MANAGEMENT
+// ==========================================
 function getStoredPlayers() {
     try { return JSON.parse(localStorage.getItem('mb_players')) || []; } catch(e) { return []; }
 }
@@ -88,15 +109,10 @@ async function syncPlayersFromCloud(showAlert = false) {
         if (result.result === 'success' && result.data) {
             saveStoredPlayers(result.data);
             loadPlayersTable();
-            if (showAlert) {
-                showToast("Data player berhasil direfresh dari Cloud!", "success");
-            }
+            if (showAlert) showToast("Data player direfresh dari Cloud!", "success");
         }
     } catch (e) { 
-        console.error("Gagal sinkronisasi cloud:", e);
-        if (showAlert) {
-            showToast("Gagal terhubung ke Cloud.", "error");
-        }
+        if (showAlert) showToast("Gagal terhubung ke Cloud.", "error");
     }
 }
 
@@ -108,6 +124,7 @@ document.getElementById('addPlayerForm').addEventListener('submit', function(e) 
     e.preventDefault();
     const submitBtn = this.querySelector('button[type="submit"]');
     setButtonLoading(submitBtn, true, "Menyimpan...");
+    
     const id = document.getElementById('pId').value.trim();
     const nama = document.getElementById('pName').value.trim();
     const section = document.getElementById('pSection').value;
@@ -120,6 +137,7 @@ document.getElementById('addPlayerForm').addEventListener('submit', function(e) 
         setButtonLoading(submitBtn, false);
         return;
     }
+    
     players.push({ Id: id, Nama: nama, Section: section, NIM: nim, Email: email });
     saveStoredPlayers(players);
     showToast("Data player berhasil disimpan!", "success");
@@ -173,20 +191,14 @@ function handleExcelUpload() {
     reader.readAsArrayBuffer(file);
 }
 
-// ==========================================
-// 1. FUNGSI TABEL MASTER PLAYER (Dengan Fitur Filter & Search)
-// ==========================================
 function loadPlayersTable() {
     const tbody = document.getElementById('playerTableBody');
     if (!tbody) return;
     
-    // Ambil nilai dari input pencarian
     const searchVal = document.getElementById('filterPlayerSearch') ? document.getElementById('filterPlayerSearch').value.toLowerCase() : '';
     const sectionVal = document.getElementById('filterPlayerSection') ? document.getElementById('filterPlayerSection').value : '';
-
     const players = getStoredPlayers();
     
-    // Proses Filter
     const filtered = players.filter(p => {
         const matchSearch = searchVal === '' || p.Id.toLowerCase().includes(searchVal) || p.Nama.toLowerCase().includes(searchVal);
         const matchSection = sectionVal === '' || p.Section === sectionVal;
@@ -199,12 +211,12 @@ function loadPlayersTable() {
         const tr = document.createElement('tr');
         tr.className = "border-b hover:bg-slate-50";
         tr.innerHTML = `
-            <td class="p-3 font-mono font-bold">${p.Id}</td>
-            <td class="p-3">${p.Nama}</td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getSectionBadgeClass(p.Section)}">${p.Section}</span></td>
-            <td class="p-3 font-mono text-xs">${p.NIM || '-'}</td>
-            <td class="p-3 text-xs text-slate-500">${p.Email || '-'}</td>
-            <td class="p-3 text-center"><button onclick="deletePlayer('${p.Id}', this)" class="bg-red-500 text-white px-2.5 py-1 rounded-lg text-xs hover:bg-red-600 font-bold shadow-sm">🗑️ Hapus</button></td>
+            <td class="p-3 font-mono font-bold whitespace-nowrap">${p.Id}</td>
+            <td class="p-3 whitespace-nowrap">${p.Nama}</td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getSectionBadgeClass(p.Section)}">${p.Section}</span></td>
+            <td class="p-3 font-mono text-xs whitespace-nowrap">${p.NIM || '-'}</td>
+            <td class="p-3 text-xs text-slate-500 whitespace-nowrap">${p.Email || '-'}</td>
+            <td class="p-3 text-center whitespace-nowrap"><button onclick="deletePlayer('${p.Id}', this)" class="bg-red-500 text-white px-2.5 py-1 rounded-lg text-xs hover:bg-red-600 font-bold shadow-sm">🗑️ Hapus</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -218,56 +230,57 @@ function deletePlayer(id, btn) {
     if (scriptUrl) fetch(`${scriptUrl}?action=deletePlayer&id=${id}`).catch(err => {});
 }
 
-function clearAllPlayers() {
-    if(confirm(`⚠️ PERINGATAN: Hapus semua data player lokal?`)) {
-        localStorage.removeItem('mb_players');
-        loadPlayersTable();
-        showToast("Data player dikosongkan.", "success");
-    }
-}
-
 function getSectionBadgeClass(section) {
     switch(section) {
-        case 'Field Commander': return 'bg-amber-100 text-amber-800 border border-amber-300';
-        case 'Brass': return 'bg-blue-100 text-blue-800 border border-blue-300';
-        case 'Battery': return 'bg-red-100 text-red-800 border border-red-300';
-        case 'Pit Percussion': return 'bg-pink-100 text-pink-800 border border-pink-300';
-        case 'Color Guard': return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
-        default: return 'bg-slate-100 text-slate-800 border border-slate-300';
+        case 'Field Commander': return 'bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap inline-block';
+        case 'Brass': return 'bg-blue-100 text-blue-800 border border-blue-300 whitespace-nowrap inline-block';
+        case 'Battery': return 'bg-red-100 text-red-800 border border-red-300 whitespace-nowrap inline-block';
+        case 'Pit Percussion': return 'bg-pink-100 text-pink-800 border border-pink-300 whitespace-nowrap inline-block';
+        case 'Color Guard': return 'bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap inline-block';
+        default: return 'bg-slate-100 text-slate-800 border border-slate-300 whitespace-nowrap inline-block';
     }
 }
 
 function getStatusBadgeClass(status) {
     switch(status) {
-        case 'Hadir': return 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300';
-        case 'Terlambat': return 'bg-amber-100 text-amber-800 font-bold border border-amber-300';
-        case 'Izin': return 'bg-orange-100 text-orange-800 font-bold border border-orange-300';
-        case 'Sakit': return 'bg-slate-200 text-slate-700 font-bold border border-slate-300';
-        case 'Alpa': return 'bg-red-100 text-red-800 font-bold border border-red-300';
-        default: return 'bg-slate-100 text-slate-800 font-bold border border-slate-300';
+        case 'Hadir': return 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 whitespace-nowrap inline-block';
+        case 'Terlambat': return 'bg-amber-100 text-amber-800 font-bold border border-amber-300 whitespace-nowrap inline-block';
+        case 'Izin': return 'bg-orange-100 text-orange-800 font-bold border border-orange-300 whitespace-nowrap inline-block';
+        case 'Sakit': return 'bg-slate-200 text-slate-700 font-bold border border-slate-300 whitespace-nowrap inline-block';
+        case 'Alpa': return 'bg-red-100 text-red-800 font-bold border border-red-300 whitespace-nowrap inline-block';
+        default: return 'bg-slate-100 text-slate-800 font-bold border border-slate-300 whitespace-nowrap inline-block';
     }
 }
 
+// ==========================================
+// 4. QR GENERATOR & BATCH ZIP ENGINE
+// ==========================================
 function generateQRCodeWithLogo(playerData, callback) {
     const jsonString = JSON.stringify({ Id: playerData.Id, Nama: playerData.Nama, Section: playerData.Section });
     const tempDiv = document.createElement('div');
     tempDiv.style.display = 'none';
     document.body.appendChild(tempDiv);
+    
     new QRCode(tempDiv, { text: jsonString, width: 400, height: 400, colorDark: "#800000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+    
     setTimeout(() => {
         const qrCanvas = tempDiv.querySelector('canvas');
         if (!qrCanvas) { document.body.removeChild(tempDiv); callback(null); return; }
+        
         const padding = 40;
         const finalCanvas = document.createElement('canvas');
         finalCanvas.width = qrCanvas.width + (padding * 2);
         finalCanvas.height = qrCanvas.height + (padding * 2);
         const ctx = finalCanvas.getContext('2d');
+        
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         ctx.drawImage(qrCanvas, padding, padding);
+        
         const logoImg = new Image();
         logoImg.crossOrigin = "anonymous";
         logoImg.src = "1.png";
+        
         logoImg.onload = function() {
             const maxLogoSize = qrCanvas.width / 4;
             let logoW = logoImg.width, logoH = logoImg.height;
@@ -288,19 +301,22 @@ function loadQRTable() {
     const sectionVal = document.getElementById('filterQrSection') ? document.getElementById('filterQrSection').value : '';
     const tbody = document.getElementById('qrTableBody');
     if (!tbody) return;
+    
     const players = getStoredPlayers();
     tbody.innerHTML = '';
     if(players.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Tidak ada data player.</td></tr>`; return; }
+    
     const filtered = players.filter(p => (searchVal === '' || p.Id.toLowerCase().includes(searchVal) || p.Nama.toLowerCase().includes(searchVal)) && (sectionVal === '' || p.Section === sectionVal));
     if(filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Tidak ada player yang cocok.</td></tr>`; return; }
+    
     filtered.forEach(p => {
         const tr = document.createElement('tr');
         tr.className = "border-b hover:bg-slate-50";
         tr.innerHTML = `
-            <td class="p-3 font-mono font-bold">${p.Id}</td>
-            <td class="p-3">${p.Nama}</td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getSectionBadgeClass(p.Section)}">${p.Section}</span></td>
-            <td class="p-3 text-center"><button onclick='previewAndDownloadQR(${JSON.stringify(p)})' class="btn-maroon px-3 py-1.5 rounded-lg text-xs font-bold">📥 Download QR</button></td>
+            <td class="p-3 font-mono font-bold whitespace-nowrap">${p.Id}</td>
+            <td class="p-3 whitespace-nowrap">${p.Nama}</td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getSectionBadgeClass(p.Section)}">${p.Section}</span></td>
+            <td class="p-3 text-center whitespace-nowrap"><button onclick='previewAndDownloadQR(${JSON.stringify(p)})' class="btn-maroon px-3 py-1.5 rounded-lg text-xs font-bold">📥 Download QR</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -338,7 +354,7 @@ function copyPortalLink() {
 }
 
 // ==========================================
-// 4. CLOUD SETTING & STATUS STABIL
+// 5. CLOUD SETTING & STATUS SESI
 // ==========================================
 async function saveSettings() {
     const dateVal = document.getElementById('settingDate').value;
@@ -378,25 +394,23 @@ async function loadSettingsFromCloud(showAlert = false) {
             const cloudOpen = result.data.openTime ? String(result.data.openTime).trim() : '';
             const cloudClose = result.data.closeTime ? String(result.data.closeTime).trim() : '';
 
-            // Simpan ke localStorage
             localStorage.setItem('mb_setting_event_title', cloudEvent);
             localStorage.setItem('mb_setting_date', cloudDate);
             localStorage.setItem('mb_setting_open', cloudOpen);
             localStorage.setItem('mb_setting_close', cloudClose);
 
-            // Masukkan ke form HTML Tab Setting
             const evInput = document.getElementById('settingEventTitle');
             const dateInput = document.getElementById('settingDate');
             const openInput = document.getElementById('settingOpenTime');
             const closeInput = document.getElementById('settingCloseTime');
 
             if (evInput) evInput.value = cloudEvent;
-            if (dateInput) dateInput.value = cloudDate; // Format string yyyy-MM-dd pas untuk input date HTML
+            if (dateInput) dateInput.value = cloudDate;
             if (openInput) openInput.value = cloudOpen;
             if (closeInput) closeInput.value = cloudClose;
 
             updateDashboardStatusBanner();
-            if (showAlert) showToast("Data setting berhasil direfresh dari Cloud!", "success");
+            if (showAlert) showToast("Data setting direfresh dari Cloud!", "success");
         }
     } catch (e) {
         if (showAlert) showToast("Gagal terhubung ke Cloud.", "error");
@@ -410,19 +424,16 @@ function manualRefreshSettings() {
 function resetActiveSettings() {
     if(!confirm("⚠️ Nonaktifkan jadwal aktif? Semua form setting akan dikosongkan.")) return;
     
-    // Hapus dari localStorage
     localStorage.removeItem('mb_setting_event_title');
     localStorage.removeItem('mb_setting_date');
     localStorage.removeItem('mb_setting_open');
     localStorage.removeItem('mb_setting_close');
     
-    // Kosongkan form HTML
     if(document.getElementById('settingEventTitle')) document.getElementById('settingEventTitle').value = '';
     if(document.getElementById('settingDate')) document.getElementById('settingDate').value = '';
     if(document.getElementById('settingOpenTime')) document.getElementById('settingOpenTime').value = '';
     if(document.getElementById('settingCloseTime')) document.getElementById('settingCloseTime').value = '';
     
-    // Kirim data kosong ke Cloud agar semua perangkat ikut kosong
     const scriptUrl = getAppScriptUrl();
     if(scriptUrl) {
         fetch(`${scriptUrl}?${new URLSearchParams({ action: 'saveSettings', eventTitle: '', date: '', openTime: '', closeTime: '' }).toString()}`);
@@ -448,21 +459,25 @@ function updateDashboardStatusBanner() {
     if(!banner) return;
 
     if(savedDate === todayStr) {
-        banner.className = "p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-center gap-3 bg-emerald-50 border-emerald-200";
-        if(dot) dot.className = "w-3.5 h-3.5 rounded-full bg-emerald-600";
-        if(title) { title.textContent = `AKTIF: ${eventTitle}`; title.className = "text-sm font-bold text-emerald-900"; }
+        banner.className = "p-3.5 sm:p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-emerald-50 border-emerald-200";
+        if(dot) dot.className = "w-3.5 h-3.5 rounded-full bg-emerald-600 shrink-0";
+        if(title) { title.textContent = `AKTIF: ${eventTitle}`; title.className = "text-xs sm:text-sm font-bold text-emerald-900"; }
         if(desc) desc.textContent = `Jadwal tanggal ${savedDate} aktif.`;
         if(hours) hours.textContent = `${openTime} - ${closeTime}`;
     } else {
-        banner.className = "p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-center gap-3 bg-red-50 border-red-200";
-        if(dot) dot.className = "w-3.5 h-3.5 rounded-full bg-red-600 animate-pulse";
-        if(title) { title.textContent = "Status Absensi Hari Ini: BELUM DISETTING"; title.className = "text-sm font-bold text-red-900"; }
+        banner.className = "p-3.5 sm:p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-red-50 border-red-200";
+        if(dot) dot.className = "w-3.5 h-3.5 rounded-full bg-red-600 animate-pulse shrink-0";
+        if(title) { title.textContent = "Status Absensi Hari Ini: BELUM DISETTING"; title.className = "text-xs sm:text-sm font-bold text-red-900"; }
         if(desc) desc.textContent = savedDate ? `Jadwal tersimpan di tanggal ${savedDate} (Bukan hari ini).` : "Belum ada jadwal aktif.";
         if(hours) hours.textContent = "Belum Diatur";
     }
 }
 
+// ==========================================
+// 6. LIVE REPORT & ANALYTICS ENGINE
+// ==========================================
 let reportCache = { date: '', data: [] };
+
 async function loadReportData(forceRefresh = false) {
     const dateVal = document.getElementById('reportDate').value;
     const tbody = document.getElementById('reportTableBody');
@@ -481,20 +496,15 @@ async function loadReportData(forceRefresh = false) {
     renderReportTable();
 }
 
-// ==========================================
-// 2. FUNGSI TABEL LIVE REPORT (Perbaikan Filter & Chart Kosong)
-// ==========================================
 function renderReportTable() {
     const dateVal = document.getElementById('reportDate').value;
     const tbody = document.getElementById('reportTableBody');
     if(!tbody) return;
 
-    // Ambil nilai filter dari HTML
     const searchVal = document.getElementById('filterSearch') ? document.getElementById('filterSearch').value.toLowerCase() : '';
     const sectionVal = document.getElementById('filterSection') ? document.getElementById('filterSection').value : '';
     const statusVal = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '';
 
-    // Proses Filter Data Live Report
     let list = reportCache.data.filter(r => {
         const matchSearch = searchVal === '' || r.Id.toLowerCase().includes(searchVal) || r.Nama.toLowerCase().includes(searchVal);
         const matchSection = sectionVal === '' || r.Section === sectionVal;
@@ -502,8 +512,6 @@ function renderReportTable() {
         return matchSearch && matchSection && matchStatus;
     });
 
-    // UPDATE CHART TERLEBIH DAHULU: 
-    // Ini memastikan jika "list" kosong, grafik akan di-reset (0 semua)
     updateChart(list);
 
     if(list.length === 0) { 
@@ -512,17 +520,16 @@ function renderReportTable() {
     }
     
     tbody.innerHTML = '';
-    
     list.forEach(r => {
         const tr = document.createElement('tr');
         tr.className = "border-b hover:bg-slate-50";
         tr.innerHTML = `
-            <td class="p-3 font-mono">${r.Time}</td>
-            <td class="p-3 font-mono text-[#800000] font-bold">${r.Id}</td>
-            <td class="p-3 font-semibold">${r.Nama}</td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${getSectionBadgeClass(r.Section)}">${r.Section}</span></td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs shadow-sm ${getStatusBadgeClass(r.Status)}">${r.Status}</span></td>
-            <td class="p-3 text-center flex items-center justify-center gap-2">
+            <td class="p-3 font-mono whitespace-nowrap">${r.Time}</td>
+            <td class="p-3 font-mono text-[#800000] font-bold whitespace-nowrap">${r.Id}</td>
+            <td class="p-3 font-semibold whitespace-nowrap">${r.Nama}</td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${getSectionBadgeClass(r.Section)}">${r.Section}</span></td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs shadow-sm ${getStatusBadgeClass(r.Status)}">${r.Status}</span></td>
+            <td class="p-3 text-center flex items-center justify-center gap-2 whitespace-nowrap">
                 <select onchange="updateStatus('${dateVal}', '${r.Id}', this.value)" class="border border-slate-300 rounded-lg text-xs p-1.5 bg-white cursor-pointer hover:border-slate-400 outline-none">
                     <option value="">Ubah...</option>
                     <option value="Hadir">Hadir</option>
@@ -578,6 +585,7 @@ function updateChart(records) {
     if(!ctx) return;
     const stats = { Hadir: 0, Terlambat: 0, Izin: 0, Sakit: 0, Alpa: 0 };
     records.forEach(r => { if(stats[r.Status] !== undefined) stats[r.Status]++; });
+    
     if(attendanceChart) attendanceChart.destroy();
     attendanceChart = new Chart(ctx, {
         type: 'bar',
@@ -594,29 +602,10 @@ function updateChart(records) {
     });
 }
 
-// Inisialisasi Halaman Utama
-window.onload = async function() {
-    const today = getLocalDateString();
-    
-    document.getElementById('settingEventTitle').value = localStorage.getItem('mb_setting_event_title') || 'Latihan Rutin';
-    document.getElementById('settingDate').value = localStorage.getItem('mb_setting_date') || today;
-    document.getElementById('settingOpenTime').value = localStorage.getItem('mb_setting_open') || '15:00';
-    document.getElementById('settingCloseTime').value = localStorage.getItem('mb_setting_close') || '18:00';
-    document.getElementById('settingScriptUrl').value = getAppScriptUrl();
-
-    updateDashboardStatusBanner();
-    loadQRTable();
-    syncPlayersFromCloud();
-    
-    await loadSettingsFromCloud(false);
-
-    switchTab('home');
-};
-
 // ==========================================
-// FITUR MODAL CEK BELUM HADIR
+// 7. MODALS, AKSI UNATTENDED & EXPORT
 // ==========================================
-function checkUnattendedPlayers(btn) {
+function checkUnattendedPlayers() {
     const dateVal = document.getElementById('reportDate').value;
     if(!dateVal) return showToast("Pilih tanggal terlebih dahulu!", "error");
     
@@ -625,32 +614,104 @@ function checkUnattendedPlayers(btn) {
     const subtitle = document.getElementById('unattendedModalSubtitle');
     
     modal.classList.remove('hidden');
-    subtitle.textContent = `Tanggal: ${dateVal}`;
+    subtitle.textContent = `Tanggal: ${dateVal} • Klik inisial untuk input manual`;
     
     const allPlayers = getStoredPlayers();
     const attendedIds = reportCache.data.map(r => String(r.Id));
     const unattended = allPlayers.filter(p => !attendedIds.includes(String(p.Id)));
     
     if(unattended.length === 0) {
-        content.innerHTML = `<div class="text-center py-8"><p class="text-emerald-600 font-bold text-lg">🎉 Sempurna!</p><p class="text-sm text-slate-500">Semua anggota telah hadir hari ini.</p></div>`;
+        content.innerHTML = `<div class="text-center py-8"><p class="text-emerald-600 font-bold text-lg">🎉 Sempurna!</p><p class="text-sm text-slate-500">Semua anggota telah hadir / tercatat hari ini.</p></div>`;
         return;
     }
     
-    let html = `<table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b text-slate-700"><tr><th class="p-3">ID</th><th class="p-3">Nama</th><th class="p-3">Section</th></tr></thead><tbody class="divide-y divide-slate-100">`;
+    let html = `
+    <div class="overflow-x-auto border rounded-2xl no-scrollbar">
+        <table class="w-full text-left text-xs min-w-[420px]">
+            <thead class="bg-slate-50 border-b text-slate-700">
+                <tr>
+                    <th class="p-3 whitespace-nowrap">ID</th>
+                    <th class="p-3 whitespace-nowrap">Nama</th>
+                    <th class="p-3 whitespace-nowrap">Section</th>
+                    <th class="p-3 text-center whitespace-nowrap">Aksi Input Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">`;
+
     unattended.forEach(p => {
-        html += `<tr class="hover:bg-slate-50"><td class="p-3 font-mono">${p.Id}</td><td class="p-3">${p.Nama}</td><td class="p-3"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${getSectionBadgeClass(p.Section)}">${p.Section}</span></td></tr>`;
+        html += `
+        <tr class="hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold whitespace-nowrap">${p.Id}</td>
+            <td class="p-3 whitespace-nowrap">${p.Nama}</td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${getSectionBadgeClass(p.Section)}">${p.Section}</span></td>
+            <td class="p-3 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1" id="btn-group-${p.Id}">
+                    <button onclick="markUnattendedStatus('${p.Id}', 'Hadir', document.getElementById('btn-group-${p.Id}'))" title="Hadir" class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition transform hover:scale-105 cursor-pointer">H</button>
+                    <button onclick="markUnattendedStatus('${p.Id}', 'Terlambat', document.getElementById('btn-group-${p.Id}'))" title="Terlambat" class="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-xs transition transform hover:scale-105 cursor-pointer">T</button>
+                    <button onclick="markUnattendedStatus('${p.Id}', 'Izin', document.getElementById('btn-group-${p.Id}'))" title="Izin" class="w-7 h-7 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-black text-xs shadow-xs transition transform hover:scale-105 cursor-pointer">I</button>
+                    <button onclick="markUnattendedStatus('${p.Id}', 'Sakit', document.getElementById('btn-group-${p.Id}'))" title="Sakit" class="w-7 h-7 rounded-lg bg-slate-500 hover:bg-slate-600 text-white font-black text-xs shadow-xs transition transform hover:scale-105 cursor-pointer">S</button>
+                    <button onclick="markUnattendedStatus('${p.Id}', 'Alpa', document.getElementById('btn-group-${p.Id}'))" title="Alpa" class="w-7 h-7 rounded-lg bg-red-600 hover:bg-red-700 text-white font-black text-xs shadow-xs transition transform hover:scale-105 cursor-pointer">A</button>
+                </div>
+            </td>
+        </tr>`;
     });
-    html += `</tbody></table>`;
+
+    html += `</tbody></table></div>`;
     content.innerHTML = html;
+}
+
+// Fungsi Input Manual Presensi Langsung dari Modal Belum Hadir
+async function markUnattendedStatus(playerId, newStatus, btnGroup) {
+    const player = getStoredPlayers().find(p => String(p.Id) === String(playerId));
+    if (!player) return;
+
+    const originalHtml = btnGroup.innerHTML;
+    btnGroup.innerHTML = `<span class="text-[10px] text-slate-400 animate-pulse font-bold">Menyimpan...</span>`;
+
+    const timestamp = getFormattedLocalDateTime();
+    const timeOnly = timestamp.split(' ')[1] || '';
+    const scriptUrl = getAppScriptUrl();
+
+    try {
+        if (scriptUrl) {
+            const res = await fetch(`${scriptUrl}?${new URLSearchParams({
+                id: player.Id,
+                nama: player.Nama,
+                section: player.Section || '',
+                status: newStatus,
+                timestamp: timestamp
+            }).toString()}`);
+            
+            const data = await res.json();
+            
+            if (data.result === 'duplicate') {
+                showToast(`Peringatan: ${player.Nama} sudah tercatat hari ini.`, "error");
+            } else {
+                showToast(`Presensi ${player.Nama} (${newStatus}) tersimpan!`, "success");
+            }
+        }
+
+        reportCache.data.push({
+            Time: timeOnly,
+            Id: player.Id,
+            Nama: player.Nama,
+            Section: player.Section || '',
+            Status: newStatus
+        });
+
+        renderReportTable();
+        checkUnattendedPlayers();
+
+    } catch (e) {
+        showToast("Tersimpan secara lokal (Offline).", "error");
+        btnGroup.innerHTML = originalHtml;
+    }
 }
 
 function closeUnattendedModal() {
     document.getElementById('unattendedModal').classList.add('hidden');
 }
 
-// ==========================================
-// FITUR EKSPOR PDF & KOSONGKAN TAB
-// ==========================================
 function exportToPDF() {
     const dateVal = document.getElementById('reportDate').value;
     if(!dateVal || reportCache.data.length === 0) return showToast("Tidak ada data untuk diekspor!", "error");
@@ -659,7 +720,7 @@ function exportToPDF() {
     const doc = new jsPDF();
     
     doc.setFontSize(14);
-    doc.setTextColor(128, 0, 0); // Maroon
+    doc.setTextColor(128, 0, 0);
     doc.text(`Laporan Absensi Marching Band UMM`, 14, 15);
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
@@ -684,6 +745,19 @@ function exportToPDF() {
     showToast("PDF berhasil diunduh!", "success");
 }
 
-function clearDailyAttendance() {
-    showToast("Fitur hapus satu tabel dilarang dari sisi klien untuk alasan keamanan. Silakan hapus sheet dari Google Sheets langsung.", "error");
-}
+window.onload = async function() {
+    const today = getLocalDateString();
+    
+    document.getElementById('settingEventTitle').value = localStorage.getItem('mb_setting_event_title') || 'Latihan Rutin';
+    document.getElementById('settingDate').value = localStorage.getItem('mb_setting_date') || today;
+    document.getElementById('settingOpenTime').value = localStorage.getItem('mb_setting_open') || '15:00';
+    document.getElementById('settingCloseTime').value = localStorage.getItem('mb_setting_close') || '18:00';
+    document.getElementById('settingScriptUrl').value = getAppScriptUrl();
+
+    updateDashboardStatusBanner();
+    loadQRTable();
+    syncPlayersFromCloud();
+    
+    await loadSettingsFromCloud(false);
+    switchTab('home');
+};

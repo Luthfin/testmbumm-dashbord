@@ -1,15 +1,25 @@
-const CACHE_NAME = 'mbumm-cache-v3'; // Naikkan versi dari v2 ke v3
+/**
+ * ==============================================================================
+ * MARCH FOR VICTORY - SERVICE WORKER (OFFLINE ENGINE)
+ * File : sw.js
+ * ==============================================================================
+ */
+
+const CACHE_NAME = 'mbumm-cache-v3'; // Naikkan versi jika melakukan update asset
 const urlsToCache = [
   '/',
   '/index.html',
   '/scanner.html',
+  '/portal.html',
   '/js/app.js',
   '/js/scanner.js',
   '/1.png',
   '/2.png',
+  '/3.png',
   '/manifest.json'
 ];
 
+// Instalasikan Service Worker & simpan file statis ke Cache Storage
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
@@ -18,6 +28,7 @@ self.addEventListener('install', event => {
   );
 });
 
+// Bersihkan Cache lama jika versi CACHE_NAME dinaikkan
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -32,6 +43,7 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Intersepsi request jaringan: Utamakan Cache, baru fetch ke Jaringan
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
