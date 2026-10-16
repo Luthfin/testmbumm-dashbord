@@ -5,7 +5,7 @@
  * File : portal.html
  * ==============================================================================
  * Deskripsi : Halaman portal untuk anggota Marching Band Universitas Muhammadiyah Malang 
-               agar dapat mengunduh kartu QR Code absensi mandiri.
+               agar dapat mengunduh kartu QR Code absensi mandiri (Mendukung Cloud Sync).
  * ==============================================================================
  -->
 
@@ -69,6 +69,9 @@
     </div>
 
     <script>
+        // URL Endpoint Database Google Sheets
+        const SCRIPT_URL = localStorage.getItem('mb_setting_script') || "https://script.google.com/macros/s/AKfycbxJGU8YPqreBWTFWKFr4l0p_BGrodkH_DIWX4Wooc3CIsjVbm7GNhV-g5bcwgPVEhas/exec";
+
         function getSectionBadgeClass(section) {
             switch(section) {
                 case 'Field Commander': return 'bg-amber-100 text-amber-800 border-amber-300';
@@ -140,7 +143,7 @@
             }, 250);
         }
 
-        function cariAnggota() {
+        async function cariAnggota() {
             const inputId = document.getElementById('memberId').value.trim().toUpperCase();
             const resultArea = document.getElementById('resultArea');
             const errorMsg = document.getElementById('errorMsg');
@@ -155,12 +158,32 @@
                 return;
             }
             
-            const players = JSON.parse(localStorage.getItem('mb_players')) || [];
-            const player = players.find(p => p.Id.toUpperCase() === inputId);
+            btn.innerHTML = `Memproses...`; 
+            btn.disabled = true;
 
+            // 1. Cek Data di LocalStorage Terlebih Dahulu
+            let players = JSON.parse(localStorage.getItem('mb_players')) || [];
+            let player = players.find(p => String(p.Id).toUpperCase() === inputId);
+
+            // 2. Jika Tidak Ditemukan di Local (Fresh Device), Tarik dari Cloud Database
+            if (!player) {
+                btn.innerHTML = `Mencari di Database...`;
+                try {
+                    const response = await fetch(`${SCRIPT_URL}?action=getPlayers`);
+                    const result = await response.json();
+                    
+                    if (result.result === 'success' && result.data) {
+                        players = result.data;
+                        localStorage.setItem('mb_players', JSON.stringify(players)); // Simpan sbg Cache
+                        player = players.find(p => String(p.Id).toUpperCase() === inputId);
+                    }
+                } catch (e) {
+                    console.error("Gagal terhubung ke Cloud", e);
+                }
+            }
+
+            // 3. Eksekusi Hasil Pencarian
             if(player) {
-                btn.innerHTML = "Memproses..."; btn.disabled = true;
-                
                 document.getElementById('resNama').textContent = player.Nama;
                 const sectionBadge = document.getElementById('resSection');
                 sectionBadge.textContent = player.Section;
@@ -178,11 +201,14 @@
                         errorMsg.textContent = "Gagal membuat gambar QR Code.";
                         errorMsg.classList.remove('hidden');
                     }
-                    btn.innerHTML = "🔍 Cari ID Saya"; btn.disabled = false;
+                    btn.innerHTML = "🔍 Cari ID Saya"; 
+                    btn.disabled = false;
                 });
             } else {
                 errorMsg.textContent = "ID tidak ditemukan. Silakan cek kembali atau hubungi admin.";
                 errorMsg.classList.remove('hidden');
+                btn.innerHTML = "🔍 Cari ID Saya"; 
+                btn.disabled = false;
             }
         }
     </script>
