@@ -5,7 +5,7 @@
  * File : portal.html
  * ==============================================================================
  * Deskripsi : Halaman portal untuk anggota Marching Band Universitas Muhammadiyah Malang 
-               agar dapat mengunduh kartu QR Code absensi mandiri (Mendukung Cloud Sync).
+               agar dapat mengunduh kartu QR Code absensi mandiri (Mendukung Cloud Sync & Kamus ID).
  * ==============================================================================
  -->
 
@@ -25,11 +25,13 @@
         .text-maroon { color: #800000; }
         .btn-maroon { background-color: #800000; color: white; transition: background 0.2s; }
         .btn-maroon:hover { background-color: #600000; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-[#800000] via-red-950 to-slate-950 flex flex-col items-center justify-center min-h-screen p-4 relative overflow-hidden">
     
-    <div class="relative z-10 bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center border border-white/20">
+    <div class="relative z-10 bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center border border-white/20">
         <div class="flex items-center justify-center gap-3 mb-2">
             <img src="1.png" alt="Logo MBUMM" class="w-12 h-12 rounded-full bg-white p-1 shadow-md">
             <div class="text-left">
@@ -38,15 +40,32 @@
             </div>
         </div>
         
-        <p class="text-xs text-slate-500 mb-6 font-medium">Download Kartu QR Code absensi mandiri Anda.</p>
+        <p class="text-[11px] sm:text-xs text-slate-500 mb-6 font-medium">Download Kartu QR Code absensi mandiri Anda.</p>
         
-        <input type="text" id="memberId" placeholder="Masukkan ID (Contoh: MB-001)" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center font-mono font-bold mb-4 bg-slate-50 focus:border-[#800000] outline-none">
+        <input type="text" id="memberId" placeholder="Masukkan ID (Contoh: MB-001)" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center font-mono font-bold mb-3 bg-slate-50 focus:border-[#800000] outline-none">
         <button id="searchBtn" onclick="cariAnggota()" class="w-full btn-maroon font-bold py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm">
             🔍 Cari ID Saya
         </button>
 
-        <!-- Hasil Pencarian -->
-        <div id="resultArea" class="mt-8 hidden space-y-4">
+        <!-- Tambahan Fitur: Daftar Kamus ID (Prototipe v4) -->
+        <div class="mt-4 text-center">
+            <button onclick="toggleMemberList()" class="text-[11px] font-bold text-[#800000] underline hover:text-red-900 transition">Lihat Daftar Anggota</button>
+        </div>
+
+        <div id="memberListArea" class="mt-4 hidden text-left bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner flex flex-col transition-all">
+            <input type="text" id="searchMemberInput" oninput="filterMemberList()" placeholder="Cari nama Anda..." class="w-full border rounded-xl p-2.5 text-xs mb-3 bg-white outline-none focus:border-[#800000]">
+            <div class="overflow-y-auto no-scrollbar max-h-48 border-t border-slate-200 pt-2">
+                <table class="w-full text-xs">
+                    <tbody id="memberListTbody" class="divide-y divide-slate-100">
+                        <tr><td class="py-3 text-center text-slate-400">Memuat data dari cloud...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- End Fitur Kamus -->
+
+        <!-- Hasil Pencarian QR -->
+        <div id="resultArea" class="mt-6 hidden space-y-4">
             <hr class="border-slate-200 border-dashed">
             <div class="space-y-1">
                 <h2 id="resNama" class="font-black text-[#800000] text-xl">Nama</h2>
@@ -69,7 +88,6 @@
     </div>
 
     <script>
-        // URL Endpoint Database Google Sheets
         const SCRIPT_URL = localStorage.getItem('mb_setting_script') || "https://script.google.com/macros/s/AKfycbxJGU8YPqreBWTFWKFr4l0p_BGrodkH_DIWX4Wooc3CIsjVbm7GNhV-g5bcwgPVEhas/exec";
 
         function getSectionBadgeClass(section) {
@@ -83,26 +101,79 @@
             }
         }
 
-        function generateQRCodeWithLogo(playerData, callback) {
-            const qrDataDict = {
-                Id: String(playerData.Id || ''),
-                Nama: String(playerData.Nama || ''),
-                Section: String(playerData.Section || ''),
-                NIM: String(playerData.NIM || ''),
-                Email: String(playerData.Email || '')
-            };
-            const jsonString = JSON.stringify(qrDataDict);
+        // ===================================
+        // LOGIKA KAMUS MEMBER (V4)
+        // ===================================
+        async function toggleMemberList() {
+            const area = document.getElementById('memberListArea');
+            if (area.classList.contains('hidden')) {
+                area.classList.remove('hidden');
+                document.getElementById('resultArea').classList.add('hidden'); // Sembunyikan QR kalau sedang terbuka
+                await populateMemberList();
+            } else {
+                area.classList.add('hidden');
+            }
+        }
 
+        async function populateMemberList() {
+            const tbody = document.getElementById('memberListTbody');
+            let players = JSON.parse(localStorage.getItem('mb_players'));
+            
+            if (!players || players.length === 0) {
+                try {
+                    const response = await fetch(`${SCRIPT_URL}?action=getPlayers`);
+                    const result = await response.json();
+                    if (result.result === 'success' && result.data) {
+                        players = result.data;
+                        localStorage.setItem('mb_players', JSON.stringify(players));
+                    }
+                } catch (e) {
+                    tbody.innerHTML = '<tr><td class="py-3 text-center text-red-500 font-bold">Gagal memuat dari Cloud</td></tr>';
+                    return;
+                }
+            }
+            
+            window.allPlayersForList = players || [];
+            filterMemberList();
+        }
+
+        function filterMemberList() {
+            const keyword = document.getElementById('searchMemberInput').value.toLowerCase();
+            const tbody = document.getElementById('memberListTbody');
+            const players = window.allPlayersForList || [];
+            
+            const filtered = players.filter(p => p.Nama.toLowerCase().includes(keyword) || p.Id.toLowerCase().includes(keyword));
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td class="py-3 text-center text-slate-400">Nama tidak ditemukan.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(p => `
+                <tr class="hover:bg-slate-100 cursor-pointer transition" onclick="selectMemberFromList('${p.Id}')">
+                    <td class="py-3 font-mono font-bold text-[#800000] w-1/3 text-[10px]">${p.Id}</td>
+                    <td class="py-3 font-semibold text-slate-700">${p.Nama}</td>
+                </tr>
+            `).join('');
+        }
+
+        function selectMemberFromList(id) {
+            document.getElementById('memberId').value = id;
+            document.getElementById('memberListArea').classList.add('hidden');
+            cariAnggota(); // Otomatis jalankan pencarian QR
+        }
+
+        // ===================================
+        // LOGIKA GENERATOR QR
+        // ===================================
+        function generateQRCodeWithLogo(playerData, callback) {
+            const qrDataDict = { Id: String(playerData.Id || ''), Nama: String(playerData.Nama || ''), Section: String(playerData.Section || '') };
+            const jsonString = JSON.stringify(qrDataDict);
             const tempDiv = document.createElement('div');
             tempDiv.style.display = 'none';
             document.body.appendChild(tempDiv);
 
-            new QRCode(tempDiv, {
-                text: jsonString,
-                width: 400, height: 400,
-                colorDark: "#800000", colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H 
-            });
+            new QRCode(tempDiv, { text: jsonString, width: 400, height: 400, colorDark: "#800000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
 
             setTimeout(() => {
                 const qrCanvas = tempDiv.querySelector('canvas');
@@ -121,25 +192,17 @@
                 const logoImg = new Image();
                 logoImg.crossOrigin = "anonymous";
                 logoImg.src = "1.png";
-
                 logoImg.onload = function() {
                     const maxLogoSize = qrCanvas.width / 4;
                     let logoW = logoImg.width, logoH = logoImg.height;
-
                     if (logoW > maxLogoSize || logoH > maxLogoSize) {
-                        if (logoW > logoH) { logoH = (maxLogoSize / logoW) * logoH; logoW = maxLogoSize; } 
-                        else { logoW = (maxLogoSize / logoH) * logoW; logoH = maxLogoSize; }
+                        if (logoW > logoH) { logoH = (maxLogoSize / logoW) * logoH; logoW = maxLogoSize; } else { logoW = (maxLogoSize / logoH) * logoW; logoH = maxLogoSize; }
                     }
-
                     ctx.drawImage(logoImg, padding + (qrCanvas.width - logoW) / 2, padding + (qrCanvas.height - logoH) / 2, logoW, logoH);
                     callback(finalCanvas.toDataURL("image/png"));
                     document.body.removeChild(tempDiv);
                 };
-
-                logoImg.onerror = function() {
-                    callback(finalCanvas.toDataURL("image/png"));
-                    document.body.removeChild(tempDiv);
-                };
+                logoImg.onerror = function() { callback(finalCanvas.toDataURL("image/png")); document.body.removeChild(tempDiv); };
             }, 250);
         }
 
@@ -158,31 +221,24 @@
                 return;
             }
             
-            btn.innerHTML = `Memproses...`; 
-            btn.disabled = true;
+            btn.innerHTML = `Memproses...`; btn.disabled = true;
 
-            // 1. Cek Data di LocalStorage Terlebih Dahulu
             let players = JSON.parse(localStorage.getItem('mb_players')) || [];
             let player = players.find(p => String(p.Id).toUpperCase() === inputId);
 
-            // 2. Jika Tidak Ditemukan di Local (Fresh Device), Tarik dari Cloud Database
             if (!player) {
                 btn.innerHTML = `Mencari di Database...`;
                 try {
                     const response = await fetch(`${SCRIPT_URL}?action=getPlayers`);
                     const result = await response.json();
-                    
                     if (result.result === 'success' && result.data) {
                         players = result.data;
-                        localStorage.setItem('mb_players', JSON.stringify(players)); // Simpan sbg Cache
+                        localStorage.setItem('mb_players', JSON.stringify(players));
                         player = players.find(p => String(p.Id).toUpperCase() === inputId);
                     }
-                } catch (e) {
-                    console.error("Gagal terhubung ke Cloud", e);
-                }
+                } catch (e) {}
             }
 
-            // 3. Eksekusi Hasil Pencarian
             if(player) {
                 document.getElementById('resNama').textContent = player.Nama;
                 const sectionBadge = document.getElementById('resSection');
@@ -201,14 +257,12 @@
                         errorMsg.textContent = "Gagal membuat gambar QR Code.";
                         errorMsg.classList.remove('hidden');
                     }
-                    btn.innerHTML = "🔍 Cari ID Saya"; 
-                    btn.disabled = false;
+                    btn.innerHTML = "🔍 Cari ID Saya"; btn.disabled = false;
                 });
             } else {
-                errorMsg.textContent = "ID tidak ditemukan. Silakan cek kembali atau hubungi admin.";
+                errorMsg.textContent = "ID tidak ditemukan. Silakan cek kembali atau gunakan fitur Lupa ID.";
                 errorMsg.classList.remove('hidden');
-                btn.innerHTML = "🔍 Cari ID Saya"; 
-                btn.disabled = false;
+                btn.innerHTML = "🔍 Cari ID Saya"; btn.disabled = false;
             }
         }
     </script>

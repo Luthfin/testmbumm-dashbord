@@ -2,24 +2,17 @@
  * ==============================================================================
  * MARCH FOR VICTORY - DASHBOARD & CLOUD ATTENDANCE SYSTEM
  * Developer    : Luthfin Ramadhani Tuadingo
- * File : index.html
- * ==============================================================================
- * Deskripsi : Halaman utama dashboard sistem absensi digital Marching Band Universitas Muhammadiyah Malang.
+ * File : index.html (v4 - Alarm & UI Updates)
  * ==============================================================================
  -->
  
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Marching Band UMM</title>
-
-    <!-- Tailwind CSS v4 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-    <!-- Library Dependensi Eksternal -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -32,19 +25,11 @@
         .bg-maroon { background-color: #800000; }
         .text-maroon { color: #800000; }
         .border-maroon { border-color: #800000; }
-        .btn-maroon {
-            background-color: #800000;
-            color: white;
-            transition: background 0.2s;
-        }
+        .btn-maroon { background-color: #800000; color: white; transition: background 0.2s; }
         .btn-maroon:hover { background-color: #600000; }
-
-        /* Sembunyikan scrollbar di menu navigasi HP agar lebih rapi */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
-
-    <!-- Favicon & PWA Theme Metadata -->
     <link rel="icon" type="image/png" href="3.png">
     <link rel="apple-touch-icon" href="3.png">
     <meta name="theme-color" content="#800000">
@@ -56,38 +41,20 @@
     <!-- HEADER / NAVBAR NAVIGASI UTAMA -->
     <header class="bg-[#800000] text-white shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
-
-            <!-- Logo & Identitas Organisasi -->
             <div onclick="switchTab('home')" class="flex items-center gap-3 cursor-pointer group w-full md:w-auto">
-                <img src="1.png" alt="Logo MBUMM"
-                    class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-full bg-white p-1 shadow-md group-hover:scale-105 transition shrink-0">
+                <img src="1.png" alt="Logo MBUMM" class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-full bg-white p-1 shadow-md group-hover:scale-105 transition shrink-0">
                 <div>
                     <h1 class="text-lg sm:text-xl font-black tracking-wide group-hover:text-amber-300 transition leading-tight">MARCHING BAND UMM</h1>
                     <p class="text-[10px] sm:text-xs text-red-200">March For Victory • Cloud Attendance System</p>
                 </div>
             </div>
-
-            <!-- Tombol Navigasi Tab (Scrollable di HP) -->
             <nav class="flex flex-nowrap md:flex-wrap overflow-x-auto w-full md:w-auto pb-1 md:pb-0 gap-1.5 bg-red-950/40 p-1.5 rounded-2xl border border-red-900/60 items-center no-scrollbar">
-                <a href="scanner.html" target="_blank"
-                    class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow shrink-0 whitespace-nowrap">
-                    📷 Scanner
-                </a>
-                <button onclick="switchTab('home')"
-                    class="tab-btn bg-white text-maroon shadow px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
-                    data-target="home">🏠 Home</button>
-                <button onclick="switchTab('players')"
-                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
-                    data-target="players">👥 Master Player</button>
-                <button onclick="switchTab('qr')"
-                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
-                    data-target="qr">🏷️ Generator QR</button>
-                <button onclick="switchTab('setting')"
-                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
-                    data-target="setting">⚙️ Setting</button>
-                <button onclick="switchTab('report')"
-                    class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap"
-                    data-target="report">📊 Live Report</button>
+                <a href="scanner.html" target="_blank" class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow shrink-0 whitespace-nowrap">📷 Scanner</a>
+                <button onclick="switchTab('home')" class="tab-btn bg-white text-maroon shadow px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap" data-target="home">🏠 Home</button>
+                <button onclick="switchTab('players')" class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap" data-target="players">👥 Master Player</button>
+                <button onclick="switchTab('qr')" class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap" data-target="qr">🏷️ Generator QR</button>
+                <button onclick="switchTab('setting')" class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap" data-target="setting">⚙️ Setting</button>
+                <button onclick="switchTab('report')" class="tab-btn text-white hover:bg-red-900 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap" data-target="report">📊 Live Report</button>
             </nav>
         </div>
     </header>
@@ -95,8 +62,7 @@
     <main class="max-w-7xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
 
         <!-- BANNER STATUS SESI LATIHAN AKTIF -->
-        <div id="attendanceStatusBanner"
-            class="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border-slate-200">
+        <div id="attendanceStatusBanner" class="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-2xl shadow-sm border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border-slate-200">
             <div class="flex items-center gap-3">
                 <div id="statusDot" class="w-3.5 h-3.5 rounded-full bg-slate-400 shrink-0"></div>
                 <div>
@@ -123,14 +89,8 @@
                         Sistem manajemen kehadiran digital, generator QR code, dan live report kehadiran anggota Marching Band Universitas Muhammadiyah Malang.
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2 sm:pt-4">
-                        <a href="scanner.html" target="_blank"
-                            class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-6 py-3 rounded-2xl text-xs sm:text-sm font-black shadow-xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                            📷 Buka Scanner
-                        </a>
-                        <button onclick="switchTab('report')"
-                            class="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold backdrop-blur-md transition shadow-lg">
-                            📊 Live Report
-                        </button>
+                        <a href="scanner.html" target="_blank" class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-6 py-3 rounded-2xl text-xs sm:text-sm font-black shadow-xl transition flex items-center justify-center gap-2">📷 Buka Scanner</a>
+                        <button onclick="switchTab('report')" class="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg">📊 Live Report</button>
                     </div>
                 </div>
             </div>
@@ -139,132 +99,71 @@
         <!-- TAB 1: MASTER PLAYERS -->
         <div id="tab-players" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Form Input Player Manual -->
                 <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
                     <h2 class="text-xs sm:text-sm font-bold text-[#800000]">➕ Tambah Player Manual</h2>
                     <form id="addPlayerForm" class="space-y-3 text-xs">
-                        <div>
-                            <label class="block font-semibold mb-1">ID Player</label>
-                            <input type="text" id="pId" required placeholder="Contoh: MB-001" class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono">
-                        </div>
-                        <div>
-                            <label class="block font-semibold mb-1">Nama Lengkap</label>
-                            <input type="text" id="pName" required placeholder="Nama anggota..." class="w-full border rounded-xl p-2.5 bg-slate-50">
-                        </div>
-                        <div>
-                            <label class="block font-semibold mb-1">Section</label>
+                        <div><label class="block font-semibold mb-1">ID Player</label><input type="text" id="pId" required placeholder="Contoh: MB-001" class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono"></div>
+                        <div><label class="block font-semibold mb-1">Nama Lengkap</label><input type="text" id="pName" required placeholder="Nama anggota..." class="w-full border rounded-xl p-2.5 bg-slate-50"></div>
+                        <div><label class="block font-semibold mb-1">Section</label>
                             <select id="pSection" class="w-full border rounded-xl p-2.5 bg-slate-50">
-                                <option value="Brass">Brass</option>
-                                <option value="Battery">Battery</option>
-                                <option value="Pit Percussion">Pit Percussion</option>
-                                <option value="Color Guard">Color Guard</option>
-                                <option value="Field Commander">Field Commander</option>
+                                <option value="Brass">Brass</option><option value="Battery">Battery</option><option value="Pit Percussion">Pit Percussion</option><option value="Color Guard">Color Guard</option><option value="Field Commander">Field Commander</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block font-semibold mb-1">NIM (Opsional)</label>
-                            <input type="text" id="pNim" placeholder="Nomor Induk Mahasiswa" class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono">
-                        </div>
-                        <div>
-                            <label class="block font-semibold mb-1">Email (Opsional)</label>
-                            <input type="email" id="pEmail" placeholder="email@domain.com" class="w-full border rounded-xl p-2.5 bg-slate-50">
-                        </div>
+                        <div><label class="block font-semibold mb-1">NIM (Opsional)</label><input type="text" id="pNim" placeholder="Nomor Induk Mahasiswa" class="w-full border rounded-xl p-2.5 bg-slate-50 font-mono"></div>
+                        <div><label class="block font-semibold mb-1">Email (Opsional)</label><input type="email" id="pEmail" placeholder="email@domain.com" class="w-full border rounded-xl p-2.5 bg-slate-50"></div>
                         <button type="submit" class="w-full btn-maroon py-3 rounded-xl font-bold shadow transition cursor-pointer">Simpan Player</button>
                     </form>
                 </div>
-
-                <!-- Impor Excel & Tabel Daftar Player -->
                 <div class="md:col-span-2 bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div>
-                            <h2 class="text-xs sm:text-sm font-bold text-[#800000]">📁 Impor Excel & Daftar Player</h2>
-                            <p class="text-[11px] text-slate-500">Impor data massal menggunakan file Excel (.xlsx).</p>
-                        </div>
+                        <div><h2 class="text-xs sm:text-sm font-bold text-[#800000]">📁 Impor Excel & Daftar Player</h2><p class="text-[11px] text-slate-500">Impor data massal menggunakan file Excel (.xlsx).</p></div>
                         <button onclick="manualRefreshPlayers()" class="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-2 rounded-xl text-xs font-bold transition">🔄 Refresh Data Player</button>
                     </div>
-
                     <div class="flex flex-col sm:flex-row items-center gap-3 p-3.5 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
                         <input type="file" id="excelFile" accept=".xlsx, .xls" class="text-xs w-full text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#800000] file:text-white hover:file:bg-red-900 cursor-pointer">
                         <button onclick="handleExcelUpload()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">📥 Unggah ke Cloud</button>
                     </div>
-
-                    <!-- Filter & Pencarian Player -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 py-2 border-t border-slate-100 mt-2">
                         <input type="text" id="filterPlayerSearch" oninput="loadPlayersTable()" placeholder="Cari Nama atau ID Player..." class="border rounded-xl p-2.5 text-xs bg-slate-50 focus:border-[#800000] outline-none">
                         <select id="filterPlayerSection" onchange="loadPlayersTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50 focus:border-[#800000] outline-none">
-                            <option value="">Semua Section</option>
-                            <option value="Brass">Brass</option>
-                            <option value="Battery">Battery</option>
-                            <option value="Pit Percussion">Pit Percussion</option>
-                            <option value="Color Guard">Color Guard</option>
-                            <option value="Field Commander">Field Commander</option>
+                            <option value="">Semua Section</option><option value="Brass">Brass</option><option value="Battery">Battery</option><option value="Pit Percussion">Pit Percussion</option><option value="Color Guard">Color Guard</option><option value="Field Commander">Field Commander</option>
                         </select>
                     </div>
-
                     <div class="overflow-x-auto border rounded-2xl no-scrollbar">
                         <table class="w-full text-left text-xs min-w-[550px]">
-                            <thead class="bg-slate-50 border-b text-slate-700">
-                                <tr>
-                                    <th class="p-3 whitespace-nowrap">ID</th>
-                                    <th class="p-3 whitespace-nowrap">Nama</th>
-                                    <th class="p-3 whitespace-nowrap">Section</th>
-                                    <th class="p-3 whitespace-nowrap">NIM</th>
-                                    <th class="p-3 whitespace-nowrap">Email</th>
-                                    <th class="p-3 text-center whitespace-nowrap">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="playerTableBody" class="divide-y divide-slate-100">
-                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Memuat data...</td></tr>
-                            </tbody>
+                            <thead class="bg-slate-50 border-b text-slate-700"><tr><th class="p-3 whitespace-nowrap">ID</th><th class="p-3 whitespace-nowrap">Nama</th><th class="p-3 whitespace-nowrap">Section</th><th class="p-3 whitespace-nowrap">NIM</th><th class="p-3 whitespace-nowrap">Email</th><th class="p-3 text-center whitespace-nowrap">Aksi</th></tr></thead>
+                            <tbody id="playerTableBody" class="divide-y divide-slate-100"><tr><td colspan="6" class="p-4 text-center text-slate-400">Memuat data...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: GENERATOR QR CODE -->
+        <!-- TAB 2: GENERATOR QR CODE (UPDATE v4: Tambah Export PDF ID) -->
         <div id="tab-qr" class="tab-content hidden space-y-6">
             <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 class="text-xs sm:text-sm font-bold text-[#800000]">🏷️ Katalog & Generator QR Code Kartu</h2>
                         <p class="text-[11px] text-slate-500">Cetak atau unduh QR Code berlogo untuk setiap anggota.</p>
                     </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button onclick="copyPortalLink()" class="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-xs font-bold border border-slate-300 transition shadow-sm whitespace-nowrap">
-                            🔗 Copy Link Portal
-                        </button>
-                        <button onclick="downloadAllQRZip()" class="flex-1 sm:flex-none btn-maroon px-3.5 py-2.5 rounded-xl text-xs font-bold shadow transition whitespace-nowrap">
-                            📦 Download Semua (ZIP)
-                        </button>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <button onclick="copyPortalLink()" class="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-xs font-bold border border-slate-300 transition shadow-sm whitespace-nowrap">🔗 Copy Link Portal</button>
+                        <button onclick="exportQRPDF()" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold shadow transition whitespace-nowrap">📄 Ekspor PDF ID</button>
+                        <button onclick="downloadAllQRZip()" class="w-full sm:w-auto btn-maroon px-3.5 py-2.5 rounded-xl text-xs font-bold shadow transition whitespace-nowrap">📦 Download Semua (ZIP)</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
                     <input type="text" id="filterQrSearch" oninput="loadQRTable()" placeholder="Cari berdasarkan Nama atau ID..." class="border rounded-xl p-2.5 text-xs bg-slate-50">
                     <select id="filterQrSection" onchange="loadQRTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50">
-                        <option value="">Semua Section</option>
-                        <option value="Brass">Brass</option>
-                        <option value="Battery">Battery</option>
-                        <option value="Pit Percussion">Pit Percussion</option>
-                        <option value="Color Guard">Color Guard</option>
-                        <option value="Field Commander">Field Commander</option>
+                        <option value="">Semua Section</option><option value="Brass">Brass</option><option value="Battery">Battery</option><option value="Pit Percussion">Pit Percussion</option><option value="Color Guard">Color Guard</option><option value="Field Commander">Field Commander</option>
                     </select>
                 </div>
-
                 <div class="overflow-x-auto border rounded-2xl no-scrollbar">
                     <table class="w-full text-left text-xs min-w-[500px]">
-                        <thead class="bg-slate-50 border-b text-slate-700">
-                            <tr>
-                                <th class="p-3 whitespace-nowrap">ID</th>
-                                <th class="p-3 whitespace-nowrap">Nama</th>
-                                <th class="p-3 whitespace-nowrap">Section</th>
-                                <th class="p-3 text-center whitespace-nowrap">Aksi Kartu</th>
-                            </tr>
-                        </thead>
-                        <tbody id="qrTableBody" class="divide-y divide-slate-100">
-                            <tr><td colspan="4" class="p-4 text-center text-slate-400">Memuat data...</td></tr>
-                        </tbody>
+                        <thead class="bg-slate-50 border-b text-slate-700"><tr><th class="p-3 whitespace-nowrap">ID</th><th class="p-3 whitespace-nowrap">Nama</th><th class="p-3 whitespace-nowrap">Section</th><th class="p-3 text-center whitespace-nowrap">Aksi Kartu</th></tr></thead>
+                        <tbody id="qrTableBody" class="divide-y divide-slate-100"><tr><td colspan="4" class="p-4 text-center text-slate-400">Memuat data...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -278,11 +177,10 @@
                         <h2 class="text-xs sm:text-sm font-bold text-[#800000]">📊 Live Report Kehadiran Sesi Latihan</h2>
                         <p class="text-[11px] text-slate-500">Pantau dan kelola data absensi harian secara langsung dari Cloud.</p>
                     </div>
-                    <!-- Control Buttons Responsif -->
                     <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
                         <input type="date" id="reportDate" onchange="loadReportData(true)" class="col-span-2 sm:col-span-1 border rounded-xl p-2 text-xs font-bold bg-slate-50">
                         <button onclick="loadReportData(true)" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition">🔄 Refresh</button>
-                        <button onclick="checkUnattendedPlayers(this)" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap">⚠️ Belum Hadir</button>
+                        <button onclick="checkUnattendedPlayers()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap">⚠️ Belum Hadir</button>
                         <button onclick="exportToPDF()" class="col-span-2 sm:col-span-1 bg-[#800000] hover:bg-red-900 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm">📄 Ekspor PDF</button>
                     </div>
                 </div>
@@ -290,20 +188,10 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                     <input type="text" id="filterSearch" oninput="renderReportTable()" placeholder="Cari Nama / ID..." class="border rounded-xl p-2.5 text-xs bg-slate-50">
                     <select id="filterSection" onchange="renderReportTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50">
-                        <option value="">Semua Section</option>
-                        <option value="Brass">Brass</option>
-                        <option value="Battery">Battery</option>
-                        <option value="Pit Percussion">Pit Percussion</option>
-                        <option value="Color Guard">Color Guard</option>
-                        <option value="Field Commander">Field Commander</option>
+                        <option value="">Semua Section</option><option value="Brass">Brass</option><option value="Battery">Battery</option><option value="Pit Percussion">Pit Percussion</option><option value="Color Guard">Color Guard</option><option value="Field Commander">Field Commander</option>
                     </select>
                     <select id="filterStatus" onchange="renderReportTable()" class="border rounded-xl p-2.5 text-xs bg-slate-50">
-                        <option value="">Semua Status</option>
-                        <option value="Hadir">Hadir</option>
-                        <option value="Terlambat">Terlambat</option>
-                        <option value="Izin">Izin</option>
-                        <option value="Sakit">Sakit</option>
-                        <option value="Alpa">Alpa</option>
+                        <option value="">Semua Status</option><option value="Hadir">Hadir</option><option value="Terlambat">Terlambat</option><option value="Izin">Izin</option><option value="Sakit">Sakit</option><option value="Alpa">Alpa</option>
                     </select>
                 </div>
 
@@ -313,59 +201,57 @@
 
                 <div class="overflow-x-auto border rounded-2xl no-scrollbar">
                     <table class="w-full text-left text-xs min-w-[620px]">
-                        <thead class="bg-slate-50 border-b text-slate-700">
-                            <tr>
-                                <th class="p-3 whitespace-nowrap">Waktu Scan</th>
-                                <th class="p-3 whitespace-nowrap">ID</th>
-                                <th class="p-3 whitespace-nowrap">Nama</th>
-                                <th class="p-3 whitespace-nowrap">Section</th>
-                                <th class="p-3 whitespace-nowrap">Status</th>
-                                <th class="p-3 text-center whitespace-nowrap">Kelola Status & Hapus</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reportTableBody" class="divide-y divide-slate-100">
-                            <tr><td colspan="6" class="p-4 text-center text-slate-400">Pilih tanggal atau muat data...</td></tr>
-                        </tbody>
+                        <thead class="bg-slate-50 border-b text-slate-700"><tr><th class="p-3 whitespace-nowrap">Waktu Scan</th><th class="p-3 whitespace-nowrap">ID</th><th class="p-3 whitespace-nowrap">Nama</th><th class="p-3 whitespace-nowrap">Section</th><th class="p-3 whitespace-nowrap">Status</th><th class="p-3 text-center whitespace-nowrap">Kelola Status & Hapus</th></tr></thead>
+                        <tbody id="reportTableBody" class="divide-y divide-slate-100"><tr><td colspan="6" class="p-4 text-center text-slate-400">Pilih tanggal atau muat data...</td></tr></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 4: SETTING -->
+        <!-- TAB 4: SETTING (UPDATE v4: Mode Alarm Jamak) -->
         <div id="tab-setting" class="tab-content hidden space-y-6">
-            <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 max-w-xl mx-auto space-y-4">
-                <h2 class="text-xs sm:text-sm font-bold text-[#800000]">⚙️ Pengaturan Jadwal & Cloud API</h2>
-                <p class="text-[11px] text-slate-500">Tentukan jadwal aktif sesi latihan serta tautan Google Apps Script Anda.</p>
+            <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 max-w-2xl mx-auto space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div>
+                        <h2 class="text-xs sm:text-sm font-bold text-[#800000]">⚙️ Pengaturan Jadwal Latihan (Mode Alarm)</h2>
+                        <p class="text-[11px] text-slate-500">Tambahkan dan kelola multi-jadwal. Scanner aktif sesuai jadwal yang dinyalakan.</p>
+                    </div>
+                    <button onclick="manualRefreshSettings()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-2 rounded-xl font-bold text-xs transition">🔄 Refresh</button>
+                </div>
 
-                <div class="space-y-3 text-xs pt-1">
-                    <div>
-                        <label class="block font-semibold mb-1">Judul Jenis Kegiatan</label>
-                        <input type="text" id="settingEventTitle" placeholder="Contoh: Latihan Rutin, TC..." class="w-full border rounded-xl p-2.5 bg-slate-50 font-bold text-[#800000]">
-                    </div>
-                    <div>
-                        <label class="block font-semibold mb-1">Tanggal Sesi Latihan</label>
-                        <input type="date" id="settingDate" class="w-full border rounded-xl p-2.5 bg-slate-50 font-bold">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
+                <!-- Form Tambah Jadwal (Alarm Baru) -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-700">➕ Tambah Jadwal Baru</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="block font-semibold mb-1">Judul Kegiatan</label>
+                            <input type="text" id="setEventTitle" placeholder="Contoh: Latihan Rutin..." class="w-full border border-slate-300 rounded-xl p-2 bg-white font-bold text-[#800000] outline-none focus:border-[#800000]">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Tanggal Latihan</label>
+                            <input type="date" id="setDate" class="w-full border border-slate-300 rounded-xl p-2 bg-white font-bold outline-none focus:border-[#800000]">
+                        </div>
                         <div>
                             <label class="block font-semibold mb-1">Jam Buka Sesi</label>
-                            <input type="time" id="settingOpenTime" class="w-full border rounded-xl p-2.5 bg-slate-50">
+                            <input type="time" id="setOpenTime" class="w-full border border-slate-300 rounded-xl p-2 bg-white outline-none focus:border-[#800000]">
                         </div>
                         <div>
                             <label class="block font-semibold mb-1">Jam Tutup (Batas Hadir)</label>
-                            <input type="time" id="settingCloseTime" class="w-full border rounded-xl p-2.5 bg-slate-50">
+                            <input type="time" id="setCloseTime" class="w-full border border-slate-300 rounded-xl p-2 bg-white outline-none focus:border-[#800000]">
                         </div>
                     </div>
-                    <div class="pt-3 border-t border-slate-200 mt-4">
-                        <label class="block font-semibold mb-1 text-slate-400">🔗 Database URL (Sistem)</label>
-                        <input type="text" id="settingScriptUrl" class="w-full border rounded-xl p-2.5 bg-slate-100 text-slate-500 font-mono text-[10px] cursor-not-allowed" readonly>
-                    </div>
-                    <button onclick="saveSettings()" class="w-full btn-maroon py-3 mt-2 rounded-xl font-bold shadow transition cursor-pointer">Simpan Pengaturan</button>
+                    <button onclick="addSchedule()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs shadow transition mt-2">Simpan Jadwal ke Alarm</button>
+                </div>
 
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <button onclick="manualRefreshSettings()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 py-2.5 rounded-xl font-bold text-xs transition">🔄 Refresh Data</button>
-                        <button onclick="resetActiveSettings()" class="bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl font-bold text-xs transition border border-red-200">❌ Nonaktifkan Sesi</button>
-                    </div>
+                <!-- List Daftar Alarm -->
+                <div class="space-y-3 pt-2" id="scheduleListArea">
+                    <p class="text-center text-xs text-slate-400 py-4">Memuat daftar jadwal...</p>
+                </div>
+
+                <!-- Konfigurasi API -->
+                <div class="pt-3 border-t border-slate-200 mt-4">
+                    <label class="block font-semibold mb-1 text-slate-400 text-[11px]">🔗 Database URL (Sistem API)</label>
+                    <input type="text" id="settingScriptUrl" class="w-full border rounded-xl p-2.5 bg-slate-100 text-slate-500 font-mono text-[10px] cursor-not-allowed" readonly>
                 </div>
             </div>
         </div>
@@ -379,13 +265,13 @@
                 </div>
                 <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-relaxed">
                     © 2026 Marching Band Universitas Muhammadiyah Malang.<br>
-                    Cloud Attendance System v1.0 • Luthfin Ramadhani Tuadingo
+                    Cloud Attendance System v1.4 • Luthfin Ramadhani Tuadingo
                 </p>
             </div>
         </footer>
     </main>
 
-    <!-- MODAL CEK ANGGOTA BELUM HADIR (Responsif HP) -->
+    <!-- MODAL CEK ANGGOTA BELUM HADIR -->
     <div id="unattendedModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg sm:max-w-2xl w-full p-4 sm:p-6 space-y-3 max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-2.5">
@@ -404,19 +290,11 @@
     <!-- Container Toast Notification -->
     <div id="toast-container" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Script Utama Dashboard -->
-    <script src="js/app.js?v=1.1"></script>
-
-    <!-- Registrasi Service Worker PWA -->
+    <script src="js/app.js?v=1.4"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker Registered'))
-                    .catch(err => console.log('Service Worker Error', err));
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.log('Service Worker Error', err)); });
         }
     </script>
 </body>
-
 </html>
