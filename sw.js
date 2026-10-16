@@ -5,7 +5,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = 'mbumm-cache-v3'; // Naikkan versi jika melakukan update asset
+const CACHE_NAME = 'mbumm-cache-v4'; // Naikkan versi jika melakukan update asset
 const urlsToCache = [
   '/',
   '/index.html',
